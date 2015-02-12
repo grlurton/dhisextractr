@@ -1,0 +1,9 @@
+{
+    "path" : "~/nigeriahmis/dhisextractr",
+    "sortOrder" : [
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}
