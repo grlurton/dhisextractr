@@ -55,12 +55,14 @@ make_shapefiles <- function(formatted_coordinates){
     }
   }
 
+  print('making the points shapefile')
   points_shapefile$lat <- as.numeric(as.character(points_shapefile$lat))
   points_shapefile$long <- as.numeric(as.character(points_shapefile$long))
-  coordinates(points_shapefile) = ~ long+lat
+  ShapeData <- data.frame(org_unit_ID = unique(points_shapefile$org_unit_ID) )
+  points_shapefile <- convert.to.shapefile(points_shapefile, ShapeData, "org_unit_ID", 1)
 
-  print('points ok')
 
+  print('making the polygons shapefile')
   poly_shapefile$lat <- as.numeric(as.character(poly_shapefile$lat))
   poly_shapefile$long <- as.numeric(as.character(poly_shapefile$long))
   ShapeData <- data.frame(org_unit_ID = unique(poly_shapefile$org_unit_ID) )
@@ -81,7 +83,7 @@ make_shapefiles <- function(formatted_coordinates){
 extract_geolocalisation <- function(org_units_description){
   formatted_gps <- dlply(org_units_description , .(org_unit_ID) ,
                          function(org_units_description){
-                           tabGPS(org_units_description)
+                           format_GPS(org_units_description)
                            },
                          .progress = 'text')
 
