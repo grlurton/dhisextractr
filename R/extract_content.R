@@ -64,8 +64,8 @@ extract_dhis_content <- function(base_url , userID, password){
   print('Extracting units information')
   extracted_orgunits <- dlply(org_units_list , .(org_unit_ID) ,
                             function(org_units_list) {
-                              extract_org_unit(as.character(org_units_list$org_unit_url) ,
-                                               userID , password)
+                              try(extract_org_unit(as.character(org_units_list$org_unit_url) ,
+                                               userID , password))
                               },
                               .progress = 'text'
                             )
