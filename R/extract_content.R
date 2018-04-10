@@ -36,7 +36,6 @@ extract_dhis_content <- function(base_url , userID, password){
                                      userID ,
                                      password)
 
-
   ## This call only extracts data elements with regard to data sets. Needs to extract data elements in isolation.
   print('Extracting Data Elements')
   data_elements_list <- extract_data_elements(urls$data_elements_url, userID, password)
@@ -51,25 +50,25 @@ extract_dhis_content <- function(base_url , userID, password){
   print('Extracting Categories')
   data_elements_categories <- extract_categories(as.character(urls$data_elements_categories) ,
                                                  userID ,
-                                                 password)
+                                                 password )
 
 
   print('Extracting Organisation Units List')
   org_units_list <- extract_orgunits_list(as.character(urls$org_units_url) ,
                                           userID , password)
 
-
-  ## Taking out duplicated facilities
-  n_units <- ddply(org_units_list  , .(ID) , nrow)
+  ## Taking out duplicate facilities
+  n_units <- ddply(org_units_list  , .(id) , nrow)
   simple_units <- subset(n_units , V1 > 1)
 
-  org_units_list <- subset(org_units_list , !(ID %in% simple_units$ID))
+  org_units_list <- subset(org_units_list , !(id %in% simple_units$id))
+  org_units_list$url_list <- paste0(base_url, '/api/organisationUnits/', org_units_list$id, '.json')
 
   print('Extracting units information')
-  extracted_orgunits <- dlply(org_units_list , .(ID) ,
+  extracted_orgunits <- dlply(org_units_list , .(url_list) ,
                             function(org_units_list) {
                               try(extract_org_unit(as.character(org_units_list$url_list) ,
-                                               userID , password))
+                                                   userID , password))
                               },
                               .progress = 'text'
                             )

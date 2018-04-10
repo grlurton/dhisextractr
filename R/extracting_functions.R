@@ -7,8 +7,8 @@
 #' flexibility in the kind of parsable urls.
 parse_page <- function(url, userID, password){
   url <- as.character(url)
-  {if(substr(url, nchar(url) - 4, nchar(url)) != '.json')
-    stop('This does not appear to be a json address')}
+ # {if(substr(url, nchar(url) - 4, nchar(url)) != '.json')
+  #  stop('This does not appear to be a json address')}
 
   # create username and password
   userpwd <- paste(userID, password , sep = ':')
@@ -53,9 +53,9 @@ extract_info <- function(url_page, node_name, userID , password , monitor = F){
     # Setting the page to extract
     if(NPages > 1){
       url_read <- paste(url_page , '?page=' , page , sep = '')
-      if(substr(url_read, nchar(url_read) - 4, nchar(url_read)) != '.json'){
-        url_read <- paste0(url_read, '.json')
-      }
+  #    if(substr(url_read, nchar(url_read) - 4, nchar(url_read)) != '.json'){
+  #      url_read <- paste0(url_read, '.json')
+  #    }
     }
     else{
       url_read <- url_page
@@ -70,8 +70,8 @@ extract_info <- function(url_page, node_name, userID , password , monitor = F){
     node_elements <- page[[node_name]]
 
     data <- data.frame(node_elements)
+    out <- rbind(out, data)
   }
-  out <- rbind(out, data)
   return(out)
 }
 
@@ -89,7 +89,7 @@ extract_info <- function(url_page, node_name, userID , password , monitor = F){
 #' unique ID, its name and its url.
 
 extract_dhis_datasets <- function(url , userID , password){
-  extract_info(url , root , node_name = 'dataSets' , userID , password)
+  extract_info(url ,  node_name = 'dataSets' , userID , password , TRUE)
 }
 
 #'Extract the list of data elements in a DHIS data set
@@ -104,7 +104,7 @@ extract_dhis_datasets <- function(url , userID , password){
 #' @return Returns a data frame with each data element as a line and for each data
 #' element, its unique ID, its name and its url.
 extract_data_elements <- function(dataset_url, userID, password){
-  extract_info(dataset_url , node_name = 'dataElements',  userID , password)
+  extract_info(dataset_url , node_name = 'dataElements',  userID , password, TRUE)
 }
 
 #'Extract the list of Organisation Units in the DHIS setting
@@ -142,30 +142,31 @@ extract_orgunits_list <- function(org_unit_page_url, userID, password){
 #'
 #' * __Datasets__ Datasets for which the organisation unit should communicate data
 extract_org_unit <- function(org_unit_url, userID, password){
-  root <- parse_page(org_unit_url , userID , password)
+  page <- parse_page(org_unit_url , userID , password)
 
   ##Extraction of org units metadata
-    parent_id <- parent_name <- parent_url <- NA
 
-    id <- xmlAttrs(root)[['id']]
-    coordinates <- xmlValue(root[['coordinates']])
-    opening_date <- xmlValue(root[['openingDate']])
-    name <- xmlValue(root[['displayName']])
-  if (!is.null(root[['parent']])){
-    parent_id <- xmlAttrs(root[['parent']])[['id']]
+  id <- page$id
+  opening_date <- page$openingDate
+  name <- page$displayName
+  coordinates <- NA
+  if (!is.null(page[['coordinates']])){
+    parent_id <- page$coordinates
+  }
+  parent_id <- NA
+  if (!is.null(page[['parent']])){
+    parent_id <- page$parent$id
   }
   org_unit_metadata <- data.frame(id , coordinates , opening_date , name , parent_id)
 
   ##Extraction of org units groups
-  if (!is.null(root[['organisationUnitGroups']])){
-    Groups <- root[['organisationUnitGroups']]
-    org_unit_group <- xmlSApply(Groups , xmlGetAttr , 'id')
+  if (!is.null(page[['organisationUnitGroups']])){
+    org_unit_group <- page$organisationUnitGroups$id
   }
 
   ##Extraction of org units datasets
-  if (!is.null(root[['dataSets']])){
-    Datasets <- root[['dataSets']]
-    org_unit_dataset <- xmlSApply(Datasets , xmlGetAttr , 'id')
+  if (!is.null(page[['dataSets']])){
+    org_unit_dataset <- page$dataSets$id
   }
 
   out <- list(org_unit_metadata , org_unit_group , org_unit_dataset)
@@ -185,11 +186,7 @@ extract_org_unit <- function(org_unit_url, userID, password){
 #' @return Returns a data frame with each category as a line and for each
 #' category, its unique ID, its name and its url.
 extract_categories <- function(categories_url, userID, password){
-  out <- data.frame(org_unit_ID = character() ,
-                    org_unit_name = character()  ,
-                    org_unit_url = character() )
-  root <- parse_page(categories_url , userID , password)
-  extract_info(categories_url , root , 'categoryOptionCombos' , 'categoryOptionCombo'  , userID , password)
+  extract_info(categories_url , node_name = 'categoryOptionCombos', userID , password)
 }
 
 
