@@ -18,12 +18,12 @@ format_GPS <- function(org_units_description){
                                  lat = character()
   )
   if(coords == 2){
-    org_units_coords <- data.frame(org_unit_ID = org_units_description$org_unit_ID ,
+    org_units_coords <- data.frame(org_unit_ID = org_units_description$ID ,
                                    long = splitcoord[1] ,
                                    lat = splitcoord[2])
   }
   if(coords > 2){
-    org_units_coords <- data.frame(org_unit_ID = unique(org_units_description$org_unit_ID),
+    org_units_coords <- data.frame(org_unit_ID = unique(org_units_description$ID),
                                    long = splitcoord[2*(1:(length(splitcoord)/2))-1] ,
                                    lat = splitcoord[2*(1:(length(splitcoord)/2))]
     )
@@ -58,14 +58,14 @@ make_shapefiles <- function(formatted_coordinates){
   print('making the points shapefile')
   points_shapefile$lat <- as.numeric(as.character(points_shapefile$lat))
   points_shapefile$long <- as.numeric(as.character(points_shapefile$long))
-  ShapeData <- data.frame(org_unit_ID = unique(points_shapefile$org_unit_ID) )
+  ShapeData <- data.frame(org_unit_ID = unique(points_shapefile$ID) )
   points_shapefile <- convert.to.shapefile(points_shapefile, ShapeData, "org_unit_ID", 1)
 
 
   print('making the polygons shapefile')
   poly_shapefile$lat <- as.numeric(as.character(poly_shapefile$lat))
   poly_shapefile$long <- as.numeric(as.character(poly_shapefile$long))
-  ShapeData <- data.frame(org_unit_ID = unique(poly_shapefile$org_unit_ID) )
+  ShapeData <- data.frame(org_unit_ID = unique(poly_shapefile$ID) )
   poly_shapefile <- convert.to.shapefile(poly_shapefile, ShapeData, "org_unit_ID", 5)
 
   list(points_shapefile , poly_shapefile)
@@ -81,7 +81,7 @@ make_shapefiles <- function(formatted_coordinates){
 #' point organization units. The second element is a shapefile of polygon organization
 #' units.
 extract_geolocalisation <- function(org_units_description){
-  formatted_gps <- dlply(org_units_description , .(org_unit_ID) ,
+  formatted_gps <- dlply(org_units_description , .(ID) ,
                          function(org_units_description){
                            format_GPS(org_units_description)
                            },

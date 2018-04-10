@@ -9,16 +9,20 @@
 #' @param period_end Date of the end of the period from which to extract data
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-make_extract_call <- function(base_url , data_sets , org_unit , period_start , period_end){
-  data_set_url <- paste('dataSet=' , data_sets$datasets_ID , '&' , collapse = '' , sep = '')
-  org_unit_url <- paste('orgUnit=' , org_unit$org_unit_ID , '&' , collapse = '' , sep = '')
-  url_call <- paste(base_url , '/api/dataValueSets.xml?' , data_set_url ,
-                    org_unit_url ,
-                    'startDate=' , period_start , '&endDate=' , period_end, sep = '')
+make_extract_call <- function (base_url, data_sets, org_unit, period_start, period_end,
+                               update_date = "2009-01-01"){
+  data_set_url <- paste("dataSet=", data_sets$ID,
+                        "&", collapse = "", sep = "")
+  org_unit_url <- paste("orgUnit=", org_unit$ID, "&",
+                        collapse = "", sep = "")
+  url_call <- paste(base_url, "/api/dataValueSets.xml?", data_set_url,
+                    org_unit_url, "startDate=", period_start, "&endDate=",
+                    period_end, "&lastUpdated=", update_date, sep = "")
   url_call
 }
 
-#'Extracting a data
+
+#'Extracting a data value
 #'
 #' \code{extract_data} extracts data based on a url call
 #'
@@ -67,25 +71,41 @@ extract_data <- function(url_call , userID , password){
 #' @param password your password for this DHIS2 setting, as a character string
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-extract_all_data <- function(base_url , data_sets , org_units , deb_period , end_period ,
-                             userID , password){
-  extract_data <- ddply(org_units , .(org_unit_ID) ,
-                        function(org_units){
-                          print(as.character(org_units$org_unit_ID))
-                          url_call <- make_extract_call(base_url ,
-                                                        data_sets , org_units ,
-                                                        deb_period , end_period)
-                          out <- data.frame(data_element_ID = org_units$org_unit_ID,
-                                            period = '' ,
-                                            org_unit_ID = '',
-                                            value = '' ,
-                                            category = '' ,
-                                            last_update = '')
-                          try({out <- extract_data(url_call , userID , password)})
-
-                          out
-                        } ,
-                        .progress = 'win'
-  )
-  extract_data
+extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_period,
+          pace = 1, userID, password, update_date){
+  N_units <- nrow(org_units)
+  n_calls <- ceiling(N_units/pace)
+  group <- sort(rep(seq(n_calls), pace))[1:N_units]
+  org_units$group <- group
+  N_groups <- max(group)
+  time_env <- new.env()
+  assign("start", Sys.time(), envir = time_env)
+  assign("time_remaining", "Unknown", envir = time_env)
+  assign("time_remaining_seq", c(), envir = time_env)
+  extracted_data <- ddply(org_units, .(group), function(org_units) {
+    time_remaining <- time_env$time_remaining
+    print(paste("Group", unique(org_units$group), "of", N_groups,
+                sep = " "))
+    print(paste("Estimation Time Remaining", time_remaining,
+                "hours", sep = " "))
+    out <- data.frame(data_element_ID = org_units$ID,
+                      period = "", org_unit_ID = "", value = "", category = "",
+                      last_update = "")
+    url_call <- make_extract_call(base_url, data_sets, org_units_2,
+                                  deb_period, end_period, update_date = update_date)
+    try({
+      out <- extract_data(url_call, userID, password)
+    })
+    print(paste0(nrow(out), " Data Points Extracted"))
+    time_remaining <- difftime(Sys.time(), time_env$start,
+                               units = "hours")/unique(org_units$group) * (N_groups -
+                                                                             unique(org_units$group))
+    assign("time_remaining", time_remaining, envir = time_env)
+    seq <- c(time_env$time_remaining_seq, time_env$time_remaining)
+    plot(seq(1, N_groups), c(seq, rep(NA, N_groups - unique(org_units$group))),
+         ylim = c(0, max(seq)), xlab = "Group", ylab = "Remaining Time Estimation (Hours)")
+    assign("time_remaining_seq", seq, envir = time_env)
+    out
+  })
+  extracted_data
 }

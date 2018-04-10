@@ -36,13 +36,17 @@ extract_dhis_content <- function(base_url , userID, password){
                                      userID ,
                                      password)
 
+
+  ## This call only extracts data elements with regard to data sets. Needs to extract data elements in isolation.
   print('Extracting Data Elements')
-  data_elements <- ddply(data_sets , .(datasets_ID , datasets_name) ,
-                         function(data_sets){
-                           extract_data_elements(as.character(data_sets$datasets_url) ,
-                                                 userID , password)
-                           },
-                         .progress = 'text')
+  data_elements_list <- extract_data_elements(urls$data_elements_url, userID, password)
+
+#  data_elements <- ddply(data_sets , .(ID , displayName) ,
+#                         function(data_sets){
+#                           extract_data_elements(as.character(data_sets$url_list) ,
+#                                                 userID , password)
+#                           },
+#                         .progress = 'text')
 
   print('Extracting Categories')
   data_elements_categories <- extract_categories(as.character(urls$data_elements_categories) ,
@@ -56,15 +60,15 @@ extract_dhis_content <- function(base_url , userID, password){
 
 
   ## Taking out duplicated facilities
-  n_units <- ddply(org_units_list  , .(org_unit_ID) , nrow)
+  n_units <- ddply(org_units_list  , .(ID) , nrow)
   simple_units <- subset(n_units , V1 > 1)
 
-  org_units_list <- subset(org_units_list , !(org_unit_ID %in% simple_units$org_unit_ID))
+  org_units_list <- subset(org_units_list , !(ID %in% simple_units$ID))
 
   print('Extracting units information')
-  extracted_orgunits <- dlply(org_units_list , .(org_unit_ID) ,
+  extracted_orgunits <- dlply(org_units_list , .(ID) ,
                             function(org_units_list) {
-                              try(extract_org_unit(as.character(org_units_list$org_unit_url) ,
+                              try(extract_org_unit(as.character(org_units_list$url_list) ,
                                                userID , password))
                               },
                               .progress = 'text'
@@ -74,6 +78,6 @@ extract_dhis_content <- function(base_url , userID, password){
   org_units_group <- ldply (extracted_orgunits, function(list) data.frame(list[[2]]))
   org_units_report <- ldply (extracted_orgunits, function(list) data.frame(list[[3]]))
 
-  list(data_sets , data_elements , data_elements_categories , org_units_list ,
+  list(data_sets , data_elements_list , data_elements_categories , org_units_list ,
        org_units_description , org_units_group , org_units_report)
 }
