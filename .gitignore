@@ -1,3 +1,6 @@
 .Rproj.user
 .Rhistory
 .RData
+packrat/lib*/
+.Rbuildignore
+*.DS_Store
