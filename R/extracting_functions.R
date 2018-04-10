@@ -200,9 +200,9 @@ extract_categories <- function(categories_url, userID, password){
 #'
 #' @param base_url The url of the DHIS implementation
 make_dhis_urls <- function(base_url){
-  data_sets_url <- paste(base_url , '/api/dataSets.xml' , sep = '')
-    data_elements_url <- paste(base_url , '/api/dataElements.xml' , sep = '')
-  org_units_url <- paste(base_url , '/api/organisationUnits.xml' , sep = '')
-  data_elements_categories <- paste(base_url , '/api/categoryOptionCombos.xml' , sep = '')
+  data_sets_url <- paste(base_url , '/api/dataSets.json' , sep = '')
+    data_elements_url <- paste(base_url , '/api/dataElements.json' , sep = '')
+  org_units_url <- paste(base_url , '/api/organisationUnits.json' , sep = '')
+  data_elements_categories <- paste(base_url , '/api/categoryOptionCombos.json' , sep = '')
   data.frame(data_sets_url , data_elements_url , data_elements_categories , org_units_url)
 }
