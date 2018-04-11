@@ -28,6 +28,8 @@
 #' \strong{org_units_report} The list of reports for each organization unit as extracted by
 #' \link{extract_org_unit}.
 extract_dhis_content <- function(base_url , userID, password){
+  out <- list()
+
   print('Making DHIS urls')
   urls <- make_dhis_urls(base_url)
 
@@ -35,22 +37,31 @@ extract_dhis_content <- function(base_url , userID, password){
   data_sets <- extract_dhis_datasets(as.character(urls$data_sets_url) ,
                                      userID ,
                                      password)
+  out[["data_sets"]] <- data_sets
 
   ## This call only extracts data elements with regard to data sets. Needs to extract data elements in isolation.
-  print('Extracting Data Elements')
-  data_elements_list <- extract_data_elements(urls$data_elements_url, userID, password)
+  print('Extracting Data Elements List')
+  data_elements_list <- extract_data_elements_list(urls$data_elements_url, userID, password)
+  data_elements_list$de_url <- paste0(base_url, '/api/dataElements/', data_elements_list$id, '.json')
+  out[["data_elements_list"]] <- data_elements_list
 
-#  data_elements <- ddply(data_sets , .(ID , displayName) ,
-#                         function(data_sets){
-#                           extract_data_elements(as.character(data_sets$url_list) ,
-#                                                 userID , password)
-#                           },
-#                         .progress = 'text')
+  print('Extracting Data Elements')
+  data_elements <- dlply(data_elements_list , .(id) ,
+                         function(data){
+                           extract_data_elements(as.character(data$de_url) ,
+                                                 userID , password)
+                           },
+                         .progress = 'text')
+
+  out[["data_elements_metadata"]] <- df_from_list(data_elements, 1)
+  out[["data_elements_sets"]] <- df_from_list(data_elements, 2)
+  out[["data_elements_groups"]] <- df_from_list(data_elements, 3)
 
   print('Extracting Categories')
   data_elements_categories <- extract_categories(as.character(urls$data_elements_categories) ,
                                                  userID ,
                                                  password )
+  out[["data_elements_categories"]] <- data_elements_categories
 
 
   print('Extracting Organisation Units List')
@@ -63,6 +74,7 @@ extract_dhis_content <- function(base_url , userID, password){
 
   org_units_list <- subset(org_units_list , !(id %in% simple_units$id))
   org_units_list$url_list <- paste0(base_url, '/api/organisationUnits/', org_units_list$id, '.json')
+  out['org_units_list'] <- org_units_list
 
   print('Extracting units information')
   extracted_orgunits <- dlply(org_units_list , .(url_list) ,
@@ -73,10 +85,7 @@ extract_dhis_content <- function(base_url , userID, password){
                               .progress = 'text'
                             )
 
-  org_units_description <- ldply(extracted_orgunits , function(list) data.frame(list[[1]]))
-  org_units_group <- ldply (extracted_orgunits, function(list) data.frame(list[[2]]))
-  org_units_report <- ldply (extracted_orgunits, function(list) data.frame(list[[3]]))
-
-  list(data_sets , data_elements_list , data_elements_categories , org_units_list ,
-       org_units_description , org_units_group , org_units_report)
+  out[["org_units_description"]] <- df_from_list(extracted_orgunits, 1)
+  out[["org_units_group"]] <- df_from_list(extracted_orgunits, 2)
+  out[["org_units_report"]] <- df_from_list(extracted_orgunits, 3)
 }

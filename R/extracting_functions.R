@@ -103,7 +103,7 @@ extract_dhis_datasets <- function(url , userID , password){
 #' @param password your password for this DHIS2 setting, as a character string
 #' @return Returns a data frame with each data element as a line and for each data
 #' element, its unique ID, its name and its url.
-extract_data_elements <- function(dataset_url, userID, password){
+extract_data_elements_list <- function(dataset_url, userID, password){
   extract_info(dataset_url , node_name = 'dataElements',  userID , password, TRUE)
 }
 
@@ -126,7 +126,7 @@ extract_orgunits_list <- function(org_unit_page_url, userID, password){
 
 #'Extract information about an Orgunit
 #'
-#' \code{extract_org_unit} extracts all the information about
+#' \code{extract_org_unit} extracts all the information about an Organization Unit
 #'
 #' @param url The url of the organisation unit for which we want to extract
 #' information. The function is made to parse xml pages, so input url should be an xml
@@ -151,7 +151,7 @@ extract_org_unit <- function(org_unit_url, userID, password){
   name <- page$displayName
   coordinates <- NA
   if (!is.null(page[['coordinates']])){
-    parent_id <- page$coordinates
+    coordinates <- page$coordinates
   }
   parent_id <- NA
   if (!is.null(page[['parent']])){
@@ -172,6 +172,45 @@ extract_org_unit <- function(org_unit_url, userID, password){
   out <- list(org_unit_metadata , org_unit_group , org_unit_dataset)
   out
 }
+
+
+#'Extract information about a Data Element
+#'
+#' \code{extract_data_element} extracts all the information about a Data Element
+#'
+#' @param url The url of the organisation unit for which we want to extract
+#' information. The function is made to parse xml pages, so input url should be an xml
+#' adress or a generic web adress without extension.
+#' @param userID your username in the given DHIS2 setting, as a character string
+#' @param password your password for this DHIS2 setting, as a character string
+#' @return Returns a list with three elements :
+#' * __Metadata__ For each organization unit, includes its geolocalization and
+#' reference to parent unit
+#'
+#' * __Group __ Groups in which the organization unit is included. This is where the
+#' type of organization unit is stored
+#'
+#' * __Datasets__ Datasets for which the organisation unit should communicate data
+extract_data_elements <- function(data_element_url, userID, password){
+  page <- parse_page(data_element_url , userID , password)
+
+  id <- page$id
+  name <- page$displayName
+  categoryCombo <- page$categoryCombo
+  dataSetId <- NA
+  if (!is.null(page[['dataSetElements']])){
+    dataSetId <- page$dataSetElements$dataSet
+  }
+  dataElementGroupsID <- NA
+  if (!is.null(page[['dataElementGroups']])){
+    dataElementGroupsID <- page$dataElementGroups$id
+  }
+  data_element_metadata <- data.frame(id , name , categoryCombo)
+
+  out <- list(data_element_metadata, dataSetId, dataElementGroupsID)
+  out
+}
+
 
 #'Extract the categories for data elements
 #'
