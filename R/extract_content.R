@@ -28,8 +28,6 @@
 #' \strong{org_units_report} The list of reports for each organization unit as extracted by
 #' \link{extract_org_unit}.
 extract_dhis_content <- function(base_url , userID, password){
-  out <- list()
-
   print('Making DHIS urls')
   urls <- make_dhis_urls(base_url)
 
@@ -37,13 +35,13 @@ extract_dhis_content <- function(base_url , userID, password){
   data_sets <- extract_dhis_datasets(as.character(urls$data_sets_url) ,
                                      userID ,
                                      password)
-  out[["data_sets"]] <- data_sets
+  write.csv(data_sets , 'data_sets.csv', row.names = FALSE)
 
   ## This call only extracts data elements with regard to data sets. Needs to extract data elements in isolation.
   print('Extracting Data Elements List')
   data_elements_list <- extract_data_elements_list(urls$data_elements_url, userID, password)
   data_elements_list$de_url <- paste0(base_url, '/api/dataElements/', data_elements_list$id, '.json')
-  out[["data_elements_list"]] <- data_elements_list
+  write.csv(data_elements_list , 'data_elements_list.csv', row.names = FALSE)
 
   print('Extracting Data Elements')
   data_elements <- dlply(data_elements_list , .(id) ,
@@ -53,16 +51,23 @@ extract_dhis_content <- function(base_url , userID, password){
                            },
                          .progress = 'text')
 
-  out[["data_elements_metadata"]] <- df_from_list(data_elements, 1)
-  out[["data_elements_sets"]] <- df_from_list(data_elements, 2)
-  out[["data_elements_groups"]] <- df_from_list(data_elements, 3)
+  data_elements_metadata <- df_from_list(data_elements, 1)
+  colnames(data_elements_metadata) <- c('id', 'name', 'categoryCombo_id')
+  write.csv(data_elements_metadata , 'data_elements_metadata.csv', row.names = FALSE)
+
+  data_elements_sets <- df_from_list(data_elements, 2)
+  colnames(data_elements_sets) <- c('id', 'dataSet_id')
+  write.csv(data_elements_sets , 'data_elements_sets.csv', row.names = FALSE)
+
+  data_elements_groups <- df_from_list(data_elements, 3)
+  colnames(data_elements_groups) <- c('id', 'dataElementGroup_id')
+  write.csv(data_elements_groups , 'data_elements_groups.csv', row.names = FALSE)
 
   print('Extracting Categories')
   data_elements_categories <- extract_categories(as.character(urls$data_elements_categories) ,
                                                  userID ,
                                                  password )
-  out[["data_elements_categories"]] <- data_elements_categories
-
+  write.csv(data_elements_categories , 'data_elements_categories.csv', row.names = FALSE)
 
   print('Extracting Organisation Units List')
   org_units_list <- extract_orgunits_list(as.character(urls$org_units_url) ,
@@ -74,10 +79,10 @@ extract_dhis_content <- function(base_url , userID, password){
 
   org_units_list <- subset(org_units_list , !(id %in% simple_units$id))
   org_units_list$url_list <- paste0(base_url, '/api/organisationUnits/', org_units_list$id, '.json')
-  out['org_units_list'] <- org_units_list
+  write.csv(org_units_list , 'org_units_list.csv', row.names = FALSE)
 
   print('Extracting units information')
-  extracted_orgunits <- dlply(org_units_list , .(url_list) ,
+  extracted_orgunits <- dlply(org_units_list , .(id) ,
                             function(org_units_list) {
                               try(extract_org_unit(as.character(org_units_list$url_list) ,
                                                    userID , password))
@@ -85,7 +90,10 @@ extract_dhis_content <- function(base_url , userID, password){
                               .progress = 'text'
                             )
 
-  out[["org_units_description"]] <- df_from_list(extracted_orgunits, 1)
-  out[["org_units_group"]] <- df_from_list(extracted_orgunits, 2)
-  out[["org_units_report"]] <- df_from_list(extracted_orgunits, 3)
+  org_units_description <- df_from_list(extracted_orgunits, 1)
+  write.csv(org_units_description , 'org_units_description.csv', row.names = FALSE)
+  org_units_group <- df_from_list(extracted_orgunits, 2)
+  write.csv(org_units_group , 'org_units_group.csv', row.names = FALSE)
+  org_units_report <- df_from_list(extracted_orgunits, 3)
+  write.csv(org_units_report , 'org_units_report.csv', row.names = FALSE)
 }

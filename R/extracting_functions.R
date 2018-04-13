@@ -199,7 +199,7 @@ extract_data_elements <- function(data_element_url, userID, password){
   categoryCombo <- page$categoryCombo
   dataSetId <- NA
   if (!is.null(page[['dataSetElements']])){
-    dataSetId <- page$dataSetElements$dataSet
+    dataSetId <- page$dataSetElements$dataSet$id
   }
   dataElementGroupsID <- NA
   if (!is.null(page[['dataElementGroups']])){
