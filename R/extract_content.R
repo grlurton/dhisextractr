@@ -93,7 +93,9 @@ extract_dhis_content <- function(base_url , userID, password){
   org_units_description <- df_from_list(extracted_orgunits, 1)
   write.csv(org_units_description , 'org_units_description.csv', row.names = FALSE)
   org_units_group <- df_from_list(extracted_orgunits, 2)
+  colnames(org_units_group) <- c('id', 'id_org_units_group')
   write.csv(org_units_group , 'org_units_group.csv', row.names = FALSE)
   org_units_report <- df_from_list(extracted_orgunits, 3)
+  colnames(org_units_report) <- c('id', 'id_report')
   write.csv(org_units_report , 'org_units_report.csv', row.names = FALSE)
 }
