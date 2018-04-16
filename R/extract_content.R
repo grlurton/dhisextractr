@@ -35,45 +35,67 @@ extract_dhis_content <- function(base_url , userID, password){
   data_sets <- extract_dhis_datasets(as.character(urls$data_sets_url) ,
                                      userID ,
                                      password)
+  write.csv(data_sets , 'data_sets.csv', row.names = FALSE)
+
+  ## This call only extracts data elements with regard to data sets. Needs to extract data elements in isolation.
+  print('Extracting Data Elements List')
+  data_elements_list <- extract_data_elements_list(urls$data_elements_url, userID, password)
+  data_elements_list$de_url <- paste0(base_url, '/api/dataElements/', data_elements_list$id, '.json')
+  write.csv(data_elements_list , 'data_elements_list.csv', row.names = FALSE)
 
   print('Extracting Data Elements')
-  data_elements <- ddply(data_sets , .(datasets_ID , datasets_name) ,
-                         function(data_sets){
-                           extract_data_elements(as.character(data_sets$datasets_url) ,
+  data_elements <- dlply(data_elements_list , .(id) ,
+                         function(data){
+                           extract_data_elements(as.character(data$de_url) ,
                                                  userID , password)
                            },
                          .progress = 'text')
 
+  data_elements_metadata <- df_from_list(data_elements, 1)
+  colnames(data_elements_metadata) <- c('id', 'name', 'categoryCombo_id')
+  write.csv(data_elements_metadata , 'data_elements_metadata.csv', row.names = FALSE)
+
+  data_elements_sets <- df_from_list(data_elements, 2)
+  colnames(data_elements_sets) <- c('id', 'dataSet_id')
+  write.csv(data_elements_sets , 'data_elements_sets.csv', row.names = FALSE)
+
+  data_elements_groups <- df_from_list(data_elements, 3)
+  colnames(data_elements_groups) <- c('id', 'dataElementGroup_id')
+  write.csv(data_elements_groups , 'data_elements_groups.csv', row.names = FALSE)
+
   print('Extracting Categories')
   data_elements_categories <- extract_categories(as.character(urls$data_elements_categories) ,
                                                  userID ,
-                                                 password)
-
+                                                 password )
+  write.csv(data_elements_categories , 'data_elements_categories.csv', row.names = FALSE)
 
   print('Extracting Organisation Units List')
   org_units_list <- extract_orgunits_list(as.character(urls$org_units_url) ,
                                           userID , password)
 
-
-  ## Taking out duplicated facilities
-  n_units <- ddply(org_units_list  , .(org_unit_ID) , nrow)
+  ## Taking out duplicate facilities
+  n_units <- ddply(org_units_list  , .(id) , nrow)
   simple_units <- subset(n_units , V1 > 1)
 
-  org_units_list <- subset(org_units_list , !(org_unit_ID %in% simple_units$org_unit_ID))
+  org_units_list <- subset(org_units_list , !(id %in% simple_units$id))
+  org_units_list$url_list <- paste0(base_url, '/api/organisationUnits/', org_units_list$id, '.json')
+  write.csv(org_units_list , 'org_units_list.csv', row.names = FALSE)
 
   print('Extracting units information')
-  extracted_orgunits <- dlply(org_units_list , .(org_unit_ID) ,
+  extracted_orgunits <- dlply(org_units_list , .(id) ,
                             function(org_units_list) {
-                              try(extract_org_unit(as.character(org_units_list$org_unit_url) ,
-                                               userID , password))
+                              try(extract_org_unit(as.character(org_units_list$url_list) ,
+                                                   userID , password))
                               },
                               .progress = 'text'
                             )
 
-  org_units_description <- ldply(extracted_orgunits , function(list) data.frame(list[[1]]))
-  org_units_group <- ldply (extracted_orgunits, function(list) data.frame(list[[2]]))
-  org_units_report <- ldply (extracted_orgunits, function(list) data.frame(list[[3]]))
-
-  list(data_sets , data_elements , data_elements_categories , org_units_list ,
-       org_units_description , org_units_group , org_units_report)
+  org_units_description <- df_from_list(extracted_orgunits, 1)
+  write.csv(org_units_description , 'org_units_description.csv', row.names = FALSE)
+  org_units_group <- df_from_list(extracted_orgunits, 2)
+  colnames(org_units_group) <- c('id', 'id_org_units_group')
+  write.csv(org_units_group , 'org_units_group.csv', row.names = FALSE)
+  org_units_report <- df_from_list(extracted_orgunits, 3)
+  colnames(org_units_report) <- c('id', 'id_report')
+  write.csv(org_units_report , 'org_units_report.csv', row.names = FALSE)
 }
