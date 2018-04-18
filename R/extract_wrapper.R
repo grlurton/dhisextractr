@@ -9,13 +9,13 @@
 #' @param period_end Date of the end of the period from which to extract data
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-make_extract_call <- function (base_url, data_sets, org_unit, period_start, period_end,
-                               update_date = "2009-01-01"){
-  data_set_url <- paste("dataSet=", data_sets$ID,
+make_data_set_extract_call <- function (base_url, data_sets, org_unit, period_start, period_end,
+                                        update_date = "2009-01-01"){
+  data_set_url <- paste("dataSet=", data_sets,
                         "&", collapse = "", sep = "")
-  org_unit_url <- paste("orgUnit=", org_unit$ID, "&",
+  org_unit_url <- paste("orgUnit=", org_unit, "&",
                         collapse = "", sep = "")
-  url_call <- paste(base_url, "/api/dataValueSets.xml?", data_set_url,
+  url_call <- paste(base_url, "/api/dataValueSets.json?", data_set_url,
                     org_unit_url, "startDate=", period_start, "&endDate=",
                     period_end, "&lastUpdated=", update_date, sep = "")
   url_call
