@@ -22,6 +22,16 @@ make_data_set_extract_call <- function (base_url, data_sets, org_unit, period_st
   url_call
 }
 
+make_data_element_extract_call <- function (base_url, data_elements, org_units, period_start, period_end,
+                                        update_date = "2009-01-01"){
+  data_elements_url <- paste0("dimension=dx:", paste(data_elements, collapse=";"))
+  org_units_url <- paste0("&dimension=ou:", paste(org_units, collapse=";"))
+  months <- period_to_months(period_start, period_end)
+  dates_url <- paste0("&dimension=pe:", paste(months, collapse=";"))
+  url_call <- paste0(base_url, "/api/25/analytics.json?", data_elements_url,
+                    org_units_url, dates_url)
+  url_call
+}
 
 #'Extracting a data value
 #'
@@ -38,7 +48,14 @@ extract_data <- function(url_call , userID , password){
                    header=FALSE , ssl.verifypeer = FALSE)
 
   parsed_page <- fromJSON(response)
-  return(parsed_page$dataValues)
+  if('dataValues' %in% names(parsed_page)){
+    out <- parsed_page$dataValues
+  }
+  if('rows' %in% names(parsed_page)){
+    out <- data.frame(parsed_page$rows)
+    colnames(out) <- c('data_element_ID', 'org_unit_ID', 'period', 'value')
+  }
+  return(out)
 }
 
 
@@ -59,7 +76,7 @@ extract_data <- function(url_call , userID , password){
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
 extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_period,
-          pace = 1, userID, password, update_date){
+          pace = 1, userID, password, update_date = NULL , type_extract = 'ds'){
   N_units <- length(org_units)
   n_calls <- ceiling(N_units/pace)
   group <- sort(rep(seq(n_calls), pace))[1:N_units]
@@ -78,10 +95,17 @@ extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_pe
     out <- data.frame(data_element_ID = org_units$ID,
                       period = "", org_unit_ID = "", value = "", category = "",
                       last_update = "")
-    url_call <- make_data_set_extract_call(base_url, data_sets, org_units$ID,
+    if (type_extract == 'ds'){
+      url_call <- make_data_set_extract_call(base_url, data_sets, org_units$ID,
                                   deb_period, end_period, update_date = update_date)
+    }
+    if (type_extract == 'de'){
+      url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
+                                             deb_period, end_period)
+    }
 
     try({
+      print(url_call)
       out <- extract_data(url_call, userID, password)
     })
     print(paste0(nrow(out), " Data Points Extracted"))
