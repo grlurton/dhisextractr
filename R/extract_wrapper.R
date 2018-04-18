@@ -36,22 +36,8 @@ extract_data <- function(url_call , userID , password){
   response<-getURL(url_call , userpwd=pass , httpauth = 1L ,
                    header=FALSE , ssl.verifypeer = FALSE)
 
-  if(substr(response , 1 , 5) == "<?xml"){
-    ParsedPage <- xmlParse(response)
-    root <- xmlRoot(ParsedPage)
-
-    data_element_ID <- unlist(as.character(xmlSApply(root, xmlGetAttr, "dataElement")))
-    period <- unlist(as.character(xmlSApply(root, xmlGetAttr, "period")))
-    org_unit_ID <- unlist(as.character(xmlSApply(root , xmlGetAttr , "orgUnit")))
-    value <- unlist(as.character(xmlSApply(root , xmlGetAttr , "value")))
-    category <- unlist(as.character(xmlSApply(root , xmlGetAttr , "categoryOptionCombo")))
-    last_update <-unlist(as.character(xmlSApply(root , xmlGetAttr , "lastUpdated")))
-
-    out <- data.frame(data_element_ID , period , org_unit_ID , value , category ,
-                      last_update)
-
-    out
-  }
+  parsed_page <- fromJSON(response)
+  return(parsed_page$dataValues)
 }
 
 
