@@ -18,6 +18,7 @@ make_data_set_extract_call <- function (base_url, data_sets, org_unit, period_st
   url_call <- paste(base_url, "/api/dataValueSets.json?", data_set_url,
                     org_unit_url, "startDate=", period_start, "&endDate=",
                     period_end, "&lastUpdated=", update_date, sep = "")
+  print(url_call)
   url_call
 }
 
@@ -59,10 +60,10 @@ extract_data <- function(url_call , userID , password){
 #' parameters
 extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_period,
           pace = 1, userID, password, update_date){
-  N_units <- nrow(org_units)
+  N_units <- length(org_units)
   n_calls <- ceiling(N_units/pace)
   group <- sort(rep(seq(n_calls), pace))[1:N_units]
-  org_units$group <- group
+  org_units <- data.frame(ID=org_units, group=group)
   N_groups <- max(group)
   time_env <- new.env()
   assign("start", Sys.time(), envir = time_env)
@@ -77,8 +78,9 @@ extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_pe
     out <- data.frame(data_element_ID = org_units$ID,
                       period = "", org_unit_ID = "", value = "", category = "",
                       last_update = "")
-    url_call <- make_extract_call(base_url, data_sets, org_units_2,
+    url_call <- make_data_set_extract_call(base_url, data_sets, org_units$ID,
                                   deb_period, end_period, update_date = update_date)
+
     try({
       out <- extract_data(url_call, userID, password)
     })
