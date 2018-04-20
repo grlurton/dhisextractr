@@ -105,7 +105,6 @@ extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_pe
     }
 
     try({
-      print(url_call)
       out <- extract_data(url_call, userID, password)
     })
     print(paste0(nrow(out), " Data Points Extracted"))
