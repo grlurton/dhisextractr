@@ -15,12 +15,14 @@ df_from_org_unit_description <- function(org_units_description_list){
     id <- org_units_description_list[[1]][[1]]
     date_opening <- org_units_description_list[[1]][[3]]
     name <- org_units_description_list[[1]][[4]]
-    if(!is.null(org_units_description_list[[1]][[2]])){
-      coordinates <- org_units_description_list[[1]][[2]]
+    coordinates <- 'no gps'
+    if(!is.na(org_units_description_list[[1]][[2]])){
+      coordinates <- as.character(org_units_description_list[[1]][[2]])
     }
     if(!is.null(org_units_description_list[[1]][[5]])){
       parent <- org_units_description_list[[1]][[5]]
     }
+    #print(data.frame(id, date_opening, name, parent, coordinates))
     return(data.frame(id, date_opening, name, parent, coordinates))
   }
   )
