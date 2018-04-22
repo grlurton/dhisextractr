@@ -1,10 +1,12 @@
 df_from_list <- function(list_data, n_element){
-  out <- ldply(list_data, function(list_data){
-    if(!is.null(list_data[[n_element]])){
-      data.frame(list_data[[n_element]])
+  if(class(list_data) == "data.frame"){
+    out <- ldply(list_data, function(list_data){
+      if(!is.null(list_data[[n_element]])){
+        data.frame(list_data[[n_element]])
+      }
     }
-  }
   )
+  }
   return(out)
 }
 
@@ -12,8 +14,11 @@ df_from_list <- function(list_data, n_element){
 ##TODO Not efficient, should be extracted as a df from the beginning
 df_from_org_unit_description <- function(org_units_description_list){
   out <- ldply(org_units_description_list, function(org_units_description_list){
+    if(class(org_units_description_list[[1]]) == "data.frame"){
     id <- org_units_description_list[[1]][[1]]
-    date_opening <- org_units_description_list[[1]][[3]]
+    if(!is.na(org_units_description_list[[1]][[3]])){
+      date_opening <- org_units_description_list[[1]][[3]]
+    }
     name <- org_units_description_list[[1]][[4]]
     coordinates <- 'no gps'
     if(!is.na(org_units_description_list[[1]][[2]])){
@@ -24,6 +29,7 @@ df_from_org_unit_description <- function(org_units_description_list){
     }
     #print(data.frame(id, date_opening, name, parent, coordinates))
     return(data.frame(id, date_opening, name, parent, coordinates))
+    }
   }
   )
   return(out)

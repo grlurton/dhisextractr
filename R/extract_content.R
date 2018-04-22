@@ -82,7 +82,7 @@ extract_dhis_content <- function(base_url , userID, password){
   write.csv(org_units_list , 'org_units_list.csv', row.names = FALSE)
 
   print('Extracting units information')
-  extracted_orgunits <- dlply(org_units_list[0:100 ,] , .(id) ,
+  extracted_orgunits <- dlply(org_units_list , .(id) ,
                             function(org_units_list) {
                               try(extract_org_unit(as.character(org_units_list$url_list) ,
                                                    userID , password))
