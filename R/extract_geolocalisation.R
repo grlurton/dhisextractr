@@ -91,3 +91,16 @@ extract_geolocalisation <- function(org_units_description){
 
   out
 }
+
+
+
+write_geolocalisation <- function(shapefiles){
+  write.shapefile(shapefiles[[1]], 'map_points', arcgis=T)
+  write.shapefile(shapefiles[[2]], 'map_polygons', arcgis=T)
+  point_read <- readOGR('map_points.shp')
+  poly_read <- readOGR('map_polygons.shp')
+  writeOGR(poly_read, 'map_points.shp', driver="ESRI Shapefile", layer = 'points')
+  writeOGR(poly_read, 'map_points.geoJson', driver="GeoJSON", layer = 'points')
+  writeOGR(poly_read, 'map_polygons.shp', driver="ESRI Shapefile", layer = 'polygons')
+  writeOGR(poly_read, 'map_polygons.geoJson', driver="GeoJSON", layer = 'polygons')
+}

@@ -90,7 +90,7 @@ extract_dhis_content <- function(base_url , userID, password){
                               .progress = 'text'
                             )
 
-  org_units_description <- df_from_list(extracted_orgunits, 1)
+  org_units_description <- df_from_org_unit_description(extracted_orgunits)
   write.csv(org_units_description , 'org_units_description.csv', row.names = FALSE)
   org_units_group <- df_from_list(extracted_orgunits, 2)
   colnames(org_units_group) <- c('id', 'id_org_units_group')
