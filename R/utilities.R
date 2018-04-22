@@ -1,12 +1,12 @@
 df_from_list <- function(list_data, n_element){
-  if(class(list_data) == "data.frame"){
     out <- ldply(list_data, function(list_data){
+      if(class(list_data) == "list"){
       if(!is.null(list_data[[n_element]])){
         data.frame(list_data[[n_element]])
       }
+      }
     }
   )
-  }
   return(out)
 }
 
