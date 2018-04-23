@@ -48,14 +48,17 @@ extract_data <- function(url_call , userID , password){
                    header=FALSE , ssl.verifypeer = FALSE)
 
   parsed_page <- fromJSON(response)
-  if('dataValues' %in% names(parsed_page)){
-    out <- parsed_page$dataValues
+  print(parsed_page)
+  if(length(parsed_page) > 0){
+    if('dataValues' %in% names(parsed_page)){
+      out <- parsed_page$dataValues
+    }
+    if('rows' %in% names(parsed_page)){
+      out <- data.frame(parsed_page$rows)
+      colnames(out) <- c('data_element_ID', 'org_unit_ID', 'period', 'value')
+    }
+    return(out)
   }
-  if('rows' %in% names(parsed_page)){
-    out <- data.frame(parsed_page$rows)
-    colnames(out) <- c('data_element_ID', 'org_unit_ID', 'period', 'value')
-  }
-  return(out)
 }
 
 
@@ -103,7 +106,7 @@ extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_pe
       url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
                                              deb_period, end_period)
     }
-
+    print(url_call)
     try({
       out <- extract_data(url_call, userID, password)
     })
