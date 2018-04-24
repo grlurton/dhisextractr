@@ -9,15 +9,15 @@
 #' @param period_end Date of the end of the period from which to extract data
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-make_data_set_extract_call <- function (base_url, data_sets, org_unit, period_start, period_end,
-                                        update_date = "2009-01-01"){
+make_data_set_extract_call <- function (base_url, data_sets, org_unit, period,
+                                        update_date = "2009-01-01" , period_type){
   data_set_url <- paste("dataSet=", data_sets,
                         "&", collapse = "", sep = "")
   org_unit_url <- paste("orgUnit=", org_unit, "&",
                         collapse = "", sep = "")
   url_call <- paste(base_url, "/api/dataValueSets.json?", data_set_url,
-                    org_unit_url, "startDate=", period_start, "&endDate=",
-                    period_end, "&lastUpdated=", update_date, sep = "")
+                    org_unit_url, "startDate=", period[1], "&endDate=",
+                    period[2], "&lastUpdated=", update_date, sep = "")
   print(url_call)
   url_call
 }
@@ -78,8 +78,8 @@ extract_data <- function(url_call , userID , password){
 #' @param password your password for this DHIS2 setting, as a character string
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_period,
-          pace = 1, userID, password, update_date = NULL , type_extract = 'ds'){
+extract_all_data <- function (base_url, data_sets, org_units, period,
+          pace = 1, userID, password, update_date = NULL , type_extract = 'ds', period_type = 'quarter'){
   N_units <- length(org_units)
   n_calls <- ceiling(N_units/pace)
   group <- sort(rep(seq(n_calls), pace))[1:N_units]
@@ -100,13 +100,12 @@ extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_pe
                       last_update = "")
     if (type_extract == 'ds'){
       url_call <- make_data_set_extract_call(base_url, data_sets, org_units$ID,
-                                  deb_period, end_period, update_date = update_date)
+                                  period, update_date = update_date, period_type = period_type)
     }
     if (type_extract == 'de'){
       url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
-                                             deb_period, end_period)
+                                             period, period_type = period_type)
     }
-    print(url_call)
     try({
       out <- extract_data(url_call, userID, password)
     })
