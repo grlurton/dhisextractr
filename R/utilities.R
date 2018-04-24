@@ -34,3 +34,14 @@ df_from_org_unit_description <- function(org_units_description_list){
   )
   return(out)
 }
+
+
+load_env <- function(file = '.env'){
+  tmp <- readLines(file)
+  for(l in tmp){
+    if(substr(l , 1, 1) != '#'){
+      obj <- strsplit(l , "=")
+      assign(obj[[1]][1], obj[[1]][2] , envir=globalenv())
+    }
+  }
+}
