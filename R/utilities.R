@@ -83,5 +83,3 @@ period_to_quarter <- function(period_start, period_end){
   out[nchar(out) == 5] <- paste0(substr(out[nchar(out) == 5],1,4) , '0' , substr(out[nchar(out) == 5],5,5))
   return(sort(out))
 }
-
-period_to_quarter('201205', '201605')

@@ -22,11 +22,11 @@ make_data_set_extract_call <- function (base_url, data_sets, org_unit, period,
   url_call
 }
 
-make_data_element_extract_call <- function (base_url, data_elements, org_units, period_start, period_end,
-                                        update_date = "2009-01-01"){
+make_data_element_extract_call <- function (base_url, data_elements, org_units, period,
+                                        update_date = "2009-01-01", period_type){
   data_elements_url <- paste0("dimension=dx:", paste(data_elements, collapse=";"))
   org_units_url <- paste0("&dimension=ou:", paste(org_units, collapse=";"))
-  months <- period_to_months(period_start, period_end)
+  months <- period_to_months(period[1], period[2])
   dates_url <- paste0("&dimension=pe:", paste(months, collapse=";"))
   url_call <- paste0(base_url, "/api/25/analytics.json?", data_elements_url,
                     org_units_url, dates_url)
