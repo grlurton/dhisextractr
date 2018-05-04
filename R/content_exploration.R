@@ -15,17 +15,6 @@ get_de_reporting_facilities <- function(ds_list){
 }
 
 
-
-#data_elements <- read.csv('data_elements_metadata.csv')
-#3data_elements_sets <- read.csv('data_elements_sets.csv')
-#org_units_reports <- read.csv('org_units_report.csv')
-#look_up_data_element_term('penta')
-
-#look_up_data_set_term('penta')
-#get_de_reporting_facilities('')
-
-
-
 # Completude / par data set / bloc de data set
 
 # modalities

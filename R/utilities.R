@@ -1,5 +1,5 @@
 df_from_list <- function(list_data, n_element){
-    out <- ldply(list_data, function(list_data){
+    out <- plyr::ldply(list_data, function(list_data){
       if(class(list_data) == "list"){
       if(!is.null(list_data[[n_element]])){
         data.frame(list_data[[n_element]])
@@ -13,7 +13,7 @@ df_from_list <- function(list_data, n_element){
 
 ##TODO Not efficient, should be extracted as a df from the beginning
 df_from_org_unit_description <- function(org_units_description_list){
-  out <- ldply(org_units_description_list, function(org_units_description_list){
+  out <- plyr::ldply(org_units_description_list, function(org_units_description_list){
     if(class(org_units_description_list[[1]]) == "data.frame"){
     id <- org_units_description_list[[1]][[1]]
     if(!is.na(org_units_description_list[[1]][[3]])){
@@ -27,7 +27,6 @@ df_from_org_unit_description <- function(org_units_description_list){
     if(!is.null(org_units_description_list[[1]][[5]])){
       parent <- org_units_description_list[[1]][[5]]
     }
-    #print(data.frame(id, date_opening, name, parent, coordinates))
     return(data.frame(id, date_opening, name, parent, coordinates))
     }
   }
