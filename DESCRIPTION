@@ -3,6 +3,7 @@ Type: Package
 Title: Extract data from DHIS for analysis purpose
 Version: 0.3
 Date: 2018-04-01
+
 Authors@R: person("Gregoire", "Lurton", email = "grlurton@uw.edu", role = c("aut", "cre"))
 Description: This package aims at encapsulating useful functions to extract data from a DHIS2
     online database, format it to make it usable for data analysis R, and export it.
@@ -13,5 +14,7 @@ Imports:
     plyr,
     RCurl,
     shapefiles,
-    maptools
+    maptools,
+    jsonlite
 Suggests: testthat
+RoxygenNote: 6.0.1
