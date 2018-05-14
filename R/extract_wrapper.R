@@ -9,18 +9,29 @@
 #' @param period_end Date of the end of the period from which to extract data
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-make_extract_call <- function (base_url, data_sets, org_unit, period_start, period_end,
-                               update_date = "2009-01-01"){
-  data_set_url <- paste("dataSet=", data_sets$ID,
+make_data_set_extract_call <- function (base_url, data_sets, org_unit, period,
+                                        update_date = "2009-01-01" , period_type){
+  data_set_url <- paste("dataSet=", data_sets,
                         "&", collapse = "", sep = "")
-  org_unit_url <- paste("orgUnit=", org_unit$ID, "&",
+  org_unit_url <- paste("orgUnit=", org_unit, "&",
                         collapse = "", sep = "")
-  url_call <- paste(base_url, "/api/dataValueSets.xml?", data_set_url,
-                    org_unit_url, "startDate=", period_start, "&endDate=",
-                    period_end, "&lastUpdated=", update_date, sep = "")
+  url_call <- paste(base_url, "/api/dataValueSets.json?", data_set_url,
+                    org_unit_url, "startDate=", period[1], "&endDate=",
+                    period[2], "&lastUpdated=", update_date, sep = "")
+  print(url_call)
   url_call
 }
 
+make_data_element_extract_call <- function (base_url, data_elements, org_units, period,
+                                        update_date = "2009-01-01", period_type){
+  data_elements_url <- paste0("dimension=dx:", paste(data_elements, collapse=";"))
+  org_units_url <- paste0("&dimension=ou:", paste(org_units, collapse=";"))
+  months <- period_to_months(period[1], period[2])
+  dates_url <- paste0("&dimension=pe:", paste(months, collapse=";"))
+  url_call <- paste0(base_url, "/api/25/analytics.json?", data_elements_url,
+                    org_units_url, dates_url)
+  url_call
+}
 
 #'Extracting a data value
 #'
@@ -36,21 +47,17 @@ extract_data <- function(url_call , userID , password){
   response<-getURL(url_call , userpwd=pass , httpauth = 1L ,
                    header=FALSE , ssl.verifypeer = FALSE)
 
-  if(substr(response , 1 , 5) == "<?xml"){
-    ParsedPage <- xmlParse(response)
-    root <- xmlRoot(ParsedPage)
-
-    data_element_ID <- unlist(as.character(xmlSApply(root, xmlGetAttr, "dataElement")))
-    period <- unlist(as.character(xmlSApply(root, xmlGetAttr, "period")))
-    org_unit_ID <- unlist(as.character(xmlSApply(root , xmlGetAttr , "orgUnit")))
-    value <- unlist(as.character(xmlSApply(root , xmlGetAttr , "value")))
-    category <- unlist(as.character(xmlSApply(root , xmlGetAttr , "categoryOptionCombo")))
-    last_update <-unlist(as.character(xmlSApply(root , xmlGetAttr , "lastUpdated")))
-
-    out <- data.frame(data_element_ID , period , org_unit_ID , value , category ,
-                      last_update)
-
-    out
+  parsed_page <- fromJSON(response)
+  print(parsed_page)
+  if(length(parsed_page) > 0){
+    if('dataValues' %in% names(parsed_page)){
+      out <- parsed_page$dataValues
+    }
+    if('rows' %in% names(parsed_page)){
+      out <- data.frame(parsed_page$rows)
+      colnames(out) <- c('data_element_ID', 'org_unit_ID', 'period', 'value')
+    }
+    return(out)
   }
 }
 
@@ -71,12 +78,12 @@ extract_data <- function(url_call , userID , password){
 #' @param password your password for this DHIS2 setting, as a character string
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_period,
-          pace = 1, userID, password, update_date){
-  N_units <- nrow(org_units)
+extract_all_data <- function (base_url, data_sets, org_units, period,
+          pace = 1, userID, password, update_date = NULL , type_extract = 'ds', period_type = 'quarter'){
+  N_units <- length(org_units)
   n_calls <- ceiling(N_units/pace)
   group <- sort(rep(seq(n_calls), pace))[1:N_units]
-  org_units$group <- group
+  org_units <- data.frame(ID=org_units, group=group)
   N_groups <- max(group)
   time_env <- new.env()
   assign("start", Sys.time(), envir = time_env)
@@ -91,8 +98,14 @@ extract_all_data <- function (base_url, data_sets, org_units, deb_period, end_pe
     out <- data.frame(data_element_ID = org_units$ID,
                       period = "", org_unit_ID = "", value = "", category = "",
                       last_update = "")
-    url_call <- make_extract_call(base_url, data_sets, org_units_2,
-                                  deb_period, end_period, update_date = update_date)
+    if (type_extract == 'ds'){
+      url_call <- make_data_set_extract_call(base_url, data_sets, org_units$ID,
+                                  period, update_date = update_date, period_type = period_type)
+    }
+    if (type_extract == 'de'){
+      url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
+                                             period, period_type = period_type)
+    }
     try({
       out <- extract_data(url_call, userID, password)
     })

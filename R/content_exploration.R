@@ -11,34 +11,5 @@ look_up_data_set_term <- function(term){
 
 get_de_reporting_facilities <- function(ds_list){
   ou_list <- org_units_reports[org_units_reports$id_report %in% ds_list ,]
-  return(unique(as.character(ou_list$id)))
+  return(as.character(unique(ou_list$id)))
 }
-
-
-# Completude / par data set / bloc de data set
-
-# modalities
-
-# Somme by level -> donner la completude
-
-
-# Donnees brutes
-
-
-## ou est la data
-
-
-
-## canvas pdss => Naike
-
-## canvas SNIS
-
-
-## Status
-#  NA =>
-#  1 =>
-#  0 =>
-## Table analytics => Martin
-
-
-## Map rupture donnees SNIS zone
