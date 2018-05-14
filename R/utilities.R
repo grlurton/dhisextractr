@@ -100,3 +100,4 @@ load_env <- function(file = '.env'){
       assign(obj[[1]][1], obj[[1]][2] , envir=globalenv())
     }
   }
+}
