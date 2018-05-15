@@ -45,22 +45,22 @@ period_to_months <- function(period_start, period_end){
   month_year_n <- seq(1, substr(period_end, 5, 6))
   if (length(years) == 1){
     months <- seq(substr(period_start, 5, 6) , substr(period_end, 5, 6))
-    out <- paste0(year_start, months , concatenate = "")
+    out <- paste(year_start, months , sep = "-")
   }
   if (length(years) == 2){
-    out_1 <- paste0(year_start, month_year_1)
-    out_2 <- paste0(year_end, month_year_n)
+    out_1 <- paste(year_start, month_year_1, sep = "-")
+    out_2 <- paste(year_end, month_year_n, sep = "-")
     out <- c(out_1, out_2)
   }
   if (length(years) > 2){
     years <- years[-c(1,length(years))]
-    out_1 <- paste0(year_start, month_year_1)
-    out_2 <- apply(expand.grid(years, months), 1, paste, collapse="")
-    out_n <- paste0(year_end, month_year_n)
+    out_1 <- paste(year_start, month_year_1, sep = '-')
+    out_2 <- apply(expand.grid(years, months), 1, paste0, collapse = '-')
+    out_n <- paste(year_end, month_year_n, sep = '-')
     out <- c(out_1, out_2, out_n)
 
   }
-  out[nchar(out) == 5] <- paste0(substr(out[nchar(out) == 5],1,4) , '0' , substr(out[nchar(out) == 5],5,5))
+  out[nchar(out) == 6] <- paste0(substr(out[nchar(out) == 6],1,5) , '0' , substr(out[nchar(out) == 6],6,6))
   return(sort(out))
 }
 

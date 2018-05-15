@@ -10,24 +10,23 @@
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
 make_data_set_extract_call <- function (base_url, data_sets, org_unit, period,
-                                        update_date = "2009-01-01" , period_type){
+                                        update_date = "2009-01-01"){
   data_set_url <- paste("dataSet=", data_sets,
                         "&", collapse = "", sep = "")
   org_unit_url <- paste("orgUnit=", org_unit, "&",
                         collapse = "", sep = "")
   url_call <- paste(base_url, "/api/dataValueSets.json?", data_set_url,
                     org_unit_url, "startDate=", period[1], "&endDate=",
-                    period[2], "&lastUpdated=", update_date, sep = "")
-  print(url_call)
-  url_call
+                    period[length(period)], 
+                    "&lastUpdated=", update_date, sep = "")
+   url_call
 }
 
 make_data_element_extract_call <- function (base_url, data_elements, org_units, period,
-                                        update_date = "2009-01-01", period_type){
+                                        update_date = "2009-01-01"){
   data_elements_url <- paste0("dimension=dx:", paste(data_elements, collapse=";"))
   org_units_url <- paste0("&dimension=ou:", paste(org_units, collapse=";"))
-  months <- period_to_months(period[1], period[2])
-  dates_url <- paste0("&dimension=pe:", paste(months, collapse=";"))
+  dates_url <- paste0("&dimension=pe:", paste(period, collapse=";"))
   url_call <- paste0(base_url, "/api/25/analytics.json?", data_elements_url,
                     org_units_url, dates_url)
   url_call
@@ -46,24 +45,18 @@ extract_data <- function(url_call , userID , password){
   pass <- paste(userID , password , sep = ':')
   response<-getURL(url_call , userpwd=pass , httpauth = 1L ,
                    header=FALSE , ssl.verifypeer = FALSE)
-
   parsed_page <- fromJSON(response)
-  print(parsed_page)
   if(length(parsed_page) > 0){
-    if('dataValues' %in% names(parsed_page)){
-      out <- parsed_page$dataValues
-    }
     if('rows' %in% names(parsed_page)){
       out <- data.frame(parsed_page$rows)
       colnames(out) <- c('data_element_ID', 'org_unit_ID', 'period', 'value')
     }
+    if('dataValues' %in% names(parsed_page)){
+      out <- ldply(parsed_page$dataValues, data.frame)
+    }
     return(out)
   }
 }
-
-
-
-
 
 #'Extracting multiple sets of data value
 #'
@@ -89,6 +82,12 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
   assign("start", Sys.time(), envir = time_env)
   assign("time_remaining", "Unknown", envir = time_env)
   assign("time_remaining_seq", c(), envir = time_env)
+  if(period_type == 'quarter'){
+    period_for_call <- period_to_quarter(period[1], period[2])
+  }
+  if(period_type == 'month'){
+    period_for_call <- period_to_months(period[1], period[2])
+  }
   extracted_data <- ddply(org_units, .(group), function(org_units) {
     time_remaining <- time_env$time_remaining
     print(paste("Group", unique(org_units$group), "of", N_groups,
@@ -100,11 +99,11 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
                       last_update = "")
     if (type_extract == 'ds'){
       url_call <- make_data_set_extract_call(base_url, data_sets, org_units$ID,
-                                  period, update_date = update_date, period_type = period_type)
+                                             period_for_call, update_date = update_date)
     }
     if (type_extract == 'de'){
       url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
-                                             period, period_type = period_type)
+                                                 period_for_call)
     }
     try({
       out <- extract_data(url_call, userID, password)
