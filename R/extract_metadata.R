@@ -81,13 +81,10 @@
 #' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
 #' @param userID --> Your username in the given DHIS2 setting, as a character string
 #' @param password --> Your password for this DHIS2 setting, as a character string
-#' @return Returns a dataframe containing DataSet metadata 
+#' @return Returns a dataframe containing Orgunit metadata
+#' 
   
-  names(d)
-  
-  
-  
-  extract_metadata_DataSet <- function(url=BASE_URL, userID = USERID, password=PASSWORD, list_metdata=d) {
+  extract_metadata_OrgUnit <- function(url=BASE_URL, userID = USERID, password=PASSWORD, list_metdata=d) {
     
     require(stringr)
     OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
