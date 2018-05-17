@@ -36,7 +36,7 @@ df_from_org_unit_description <- function(org_units_description_list){
 
 
 
-period_to_months <- function(period_start, period_end){
+period_to_months <- function(period_start, period_end, sep='-'){
   year_start <- substr(period_start, 1, 4)
   year_end <- substr(period_end, 1, 4)
   years <- seq(year_start, year_end, 1)
@@ -45,22 +45,27 @@ period_to_months <- function(period_start, period_end){
   month_year_n <- seq(1, substr(period_end, 5, 6))
   if (length(years) == 1){
     months <- seq(substr(period_start, 5, 6) , substr(period_end, 5, 6))
-    out <- paste(year_start, months , sep = "-")
+    out <- paste(year_start, months , sep = sep)
   }
   if (length(years) == 2){
-    out_1 <- paste(year_start, month_year_1, sep = "-")
-    out_2 <- paste(year_end, month_year_n, sep = "-")
+    out_1 <- paste(year_start, month_year_1, sep = sep)
+    out_2 <- paste(year_end, month_year_n, sep = sep)
     out <- c(out_1, out_2)
   }
   if (length(years) > 2){
     years <- years[-c(1,length(years))]
-    out_1 <- paste(year_start, month_year_1, sep = '-')
-    out_2 <- apply(expand.grid(years, months), 1, paste0, collapse = '-')
-    out_n <- paste(year_end, month_year_n, sep = '-')
+    out_1 <- paste(year_start, month_year_1, sep = sep)
+    out_2 <- apply(expand.grid(years, months), 1, paste0, collapse = sep)
+    out_n <- paste(year_end, month_year_n, sep = sep)
     out <- c(out_1, out_2, out_n)
 
   }
-  out[nchar(out) == 6] <- paste0(substr(out[nchar(out) == 6],1,5) , '0' , substr(out[nchar(out) == 6],6,6))
+  sep_n <- nchar(sep)
+  len_catch <- 5 + sep_n
+  out[nchar(out) == len_catch] <- paste0(substr(out[nchar(out) == len_catch],1,
+                                                4 + sep_n) , 
+                                         '0' , 
+                                 substr(out[nchar(out) == len_catch],len_catch,len_catch))
   return(sort(out))
 }
 
