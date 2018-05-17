@@ -98,34 +98,37 @@
     r <- httr::content(r, "text")
     d <- jsonlite::fromJSON(r, flatten=TRUE)
     
-    OU_metadata <- as.data.frame(d$organisationUnits,stringsAsFactors=FALSE)
-    return(OU_metadata)
+    OU_metadata_out <- as.data.frame(d$organisationUnits,stringsAsFactors=FALSE)
+    return(OU_metadata_out)
   } 
  
   
-  #'Generic function to build data 
+  #'Generic function to show dataset available in Orgunits
   #'
-  #' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
-  #' @param userID --> Your username in the given DHIS2 setting, as a character string
-  #' @param password --> Your password for this DHIS2 setting, as a character string
-  #' @return Returns a dataframe containing Orgunit metadata
+  #' @param list_metadata --> The list containing all metadata from a DHIS2
+  #' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
+  #' @return Returns a dataframe containing Orgunit metadata related to datasets
   
   
-  extract_metadata_OrgUnit <- function(url=BASE_URL, userID = USERID, password=PASSWORD, list_metdata=d) {
+  extract_metadata_DataSet_OrgUnit <- function(list_metadata=d, OrgUnit_pyr=OU_metadata) {
     
-    require(stringr)
-    OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
-    OU_metadata$level <- str_count(OU_metadata$path, "/")
-    max_level <- max(OU_metadata$level)
-    parent_string <- paste0(paste(rep("id,name,parent[", max_level-2), collapse = ""), "id,name", paste(rep("]", max_level-2), collapse = ""))
+    DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
+
+    DS_content <- data.frame(matrix(ncol = 2, nrow = 0))
+    colnames(DS_content) <- c("OU_id", "DS_id")
+
+    for(i in 1:nrow(DS_metadata)) {
+      tmp <- DS_metadata$organisationUnits[[i]]
+      tmp$DS_id <- DS_metadata$id[i]
+      colnames(tmp) <- c("OU_id", "DS_id")
+      DS_content <- rbind(DS_content, tmp)
+      tmp <- NULL
+    }
     
-    tmp_url <- paste0(url,"/api/organisationUnits.json?fields=level,",parent_string,"&paging=false")
-    r <- httr::GET(tmp_url, httr::authenticate(userID,password),
-                   httr::timeout(60))
-    r <- httr::content(r, "text")
-    d <- jsonlite::fromJSON(r, flatten=TRUE)
+    DS_metadata_short <- DS_metadata %>% select(name, id) %>% rename(DS_name = "name")
+    DS_content <- merge(DS_content, DS_metadata_short, by.x = "DS_id", by.y = "id", all.x = T)
     
-    OU_metadata <- as.data.frame(d$organisationUnits,stringsAsFactors=FALSE)
-    return(OU_metadata)
+    DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T)
+    return(DS_metadata_out)
   } 
   
