@@ -110,7 +110,7 @@
   #' @return Returns a dataframe containing Orgunit metadata related to datasets
   
   
-  extract_metadata_DataSet_OrgUnit <- function(list_metadata=d, OrgUnit_pyr=OU_metadata) {
+  extract_metadata_DataSet_OrgUnit <- function(list_metadata, OrgUnit_pyr) {
     
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
 
