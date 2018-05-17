@@ -51,7 +51,7 @@
   #' @return Returns a dataframe containing DataSet metadata 
   
   extract_metadata_DataSet <- function(list_metdata=d) {
-    names(d)
+
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
     
@@ -59,7 +59,7 @@
     colnames(DS_content) <- c("DE_id", "DS_id")
 
     for(i in 1:nrow(DS_metadata)) {
-      tmp <- DS_metadata$dataSetElements[[i]] %>% select(dataElement.id, dataSet.id) ## category combo information is removed (need to be reconsi)
+      tmp <- DS_metadata$dataSetElements[[i]] %>% select(dataElement.id, dataSet.id) ## category combo information is removed (need to be reconsidered)
       colnames(tmp) <- c("DE_id", "DS_id")
       DS_content <- rbind(DS_content, tmp)
       tmp <- NULL
@@ -83,30 +83,26 @@
 #' @param password --> Your password for this DHIS2 setting, as a character string
 #' @return Returns a dataframe containing DataSet metadata 
   
-  extract_metadata_DataSet <- function(list_metdata=d) {
-    names(d)
-    DataSet_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
-    DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
+  names(d)
+  
+  
+  
+  extract_metadata_DataSet <- function(url=BASE_URL, userID = USERID, password=PASSWORD, list_metdata=d) {
     
-    DEG_content <- data.frame(matrix(ncol = 2, nrow = 0))
-    colnames(DEG_content) <- c("id", "DEG_id")
+    require(stringr)
+    OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
+    OU_metadata$level <- str_count(OU_metadata$path, "/")
+    max_level <- max(OU_metadata$level)
+    parent_string <- paste0(paste(rep("id,name,parent[", max_level-2), collapse = ""), "id,name", paste(rep("]", max_level-2), collapse = ""))
     
-    for(i in 1:nrow(DEG_metadata)) {
-      tmp <- DEG_metadata$dataElements[[i]]
-      tmp$DEG_id <- DEG_metadata$id[i]
-      DEG_content <- rbind(DEG_content, tmp)
-      tmp <- NULL
-    }
+    tmp_url <- paste0(url,"/api/organisationUnits.json?fields=level,",parent_string,"&paging=false")
+    r <- httr::GET(tmp_url, httr::authenticate(userID,password),
+                   httr::timeout(60))
+    r <- httr::content(r, "text")
+    d <- jsonlite::fromJSON(r, flatten=TRUE)
     
-    colnames(DEG_content) <- c("DE_id", "DEG_id")
-    
-    DEG_metadata_short <- DEG_metadata %>% select(name, id) %>% rename(DEG_name = "name")
-    DEG_content <- merge(DEG_content, DEG_metadata_short, by.x = "DEG_id", by.y = "id", all.x = T)
-    DE_metadata_short <- DE_metadata %>% select(name, id, domainType, zeroIsSignificant, categoryCombo.id) %>% rename(DE_name = "name", DE_id = "id")
-    DE_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "DE_id", by.y = "DE_id", all.x = T)
-    DE_metadata_out <- DE_metadata_out %>% select(DEG_name, DEG_id, DE_name, DE_id, domainType, zeroIsSignificant, categoryCombo.id) %>%
-      arrange(DEG_name, DE_name)
-    return(DE_metadata_out)
+    OU_metadata <- as.data.frame(d$organisationUnits,stringsAsFactors=FALSE)
+    return(OU_metadata)
   } 
  
   
