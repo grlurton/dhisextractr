@@ -45,12 +45,12 @@
   } 
   
   
-  #'Generic function to extract DataSet meatadata from metadata list
-  #'
-  #' @param list_metadata --> The list containing all metadata from a DHIS2.
-  #' @return Returns a dataframe containing DataSet metadata 
+#'Generic function to extract DataSet meatadata from metadata list
+#'
+#' @param list_metadata --> The list containing all metadata from a DHIS2.
+#' @return Returns a dataframe containing DataSet metadata 
   
-  extract_metadata_DataSet <- function(list_metdata=d) {
+  extract_metadata_DataSet <- function(list_metdata) {
 
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
@@ -76,15 +76,15 @@
   
   
   
-#'Generic function to extract OrgUnit meatadata from DHIS2 API
+#'Generic function to extract OrgUnit metadata from DHIS2 API
 #'
 #' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
 #' @param userID --> Your username in the given DHIS2 setting, as a character string
 #' @param password --> Your password for this DHIS2 setting, as a character string
 #' @return Returns a dataframe containing Orgunit metadata
-#' 
+
   
-  extract_metadata_OrgUnit <- function(url=BASE_URL, userID = USERID, password=PASSWORD, list_metdata=d) {
+  extract_metadata_OrgUnit <- function(url, userID, password, list_metdata) {
     
     require(stringr)
     OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
@@ -103,4 +103,29 @@
   } 
  
   
+  #'Generic function to build data 
+  #'
+  #' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
+  #' @param userID --> Your username in the given DHIS2 setting, as a character string
+  #' @param password --> Your password for this DHIS2 setting, as a character string
+  #' @return Returns a dataframe containing Orgunit metadata
+  
+  
+  extract_metadata_OrgUnit <- function(url=BASE_URL, userID = USERID, password=PASSWORD, list_metdata=d) {
+    
+    require(stringr)
+    OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
+    OU_metadata$level <- str_count(OU_metadata$path, "/")
+    max_level <- max(OU_metadata$level)
+    parent_string <- paste0(paste(rep("id,name,parent[", max_level-2), collapse = ""), "id,name", paste(rep("]", max_level-2), collapse = ""))
+    
+    tmp_url <- paste0(url,"/api/organisationUnits.json?fields=level,",parent_string,"&paging=false")
+    r <- httr::GET(tmp_url, httr::authenticate(userID,password),
+                   httr::timeout(60))
+    r <- httr::content(r, "text")
+    d <- jsonlite::fromJSON(r, flatten=TRUE)
+    
+    OU_metadata <- as.data.frame(d$organisationUnits,stringsAsFactors=FALSE)
+    return(OU_metadata)
+  } 
   
