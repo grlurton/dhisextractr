@@ -20,12 +20,10 @@
 #' @param list_metadatt --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing DEG metadata 
   
-  extract_metadata_DEG <- function(list_metdata = d) {
+  extract_metadata_DEG <- function(list_metdata) {
     
     DEG_metadata <- as.data.frame(list_metdata$dataElementGroups,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
-    CatCombo_metadata <- as.data.frame(list_metdata$categoryCombos,stringsAsFactors=FALSE)
-    CatComboOpt_metadata <- as.data.frame(list_metdata$categoryOptionCombos,stringsAsFactors=FALSE)
     
     DEG_content <- data.frame(matrix(ncol = 2, nrow = 0))
     colnames(DEG_content) <- c("id", "DEG_id")
@@ -49,12 +47,12 @@
   } 
   
   
-  #'Generic function to extract Dataset meatadata from metadata list
+  #'Generic function to extract DataSet meatadata from metadata list
   #'
   #' @param list_metadatt --> The list containing all metadata from a DHIS2.
-  #' @return Returns a dataframe containing DEG metadata 
+  #' @return Returns a dataframe containing DataSet metadata 
   
-  extract_metadata_DEG <- function(list_metdata = d) {
+  extract_metadata_DataSet <- function(list_metdata) {
     
     DEG_metadata <- as.data.frame(list_metdata$dataElementGroups,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
@@ -83,8 +81,6 @@
   } 
   
   
-  
-  
-  
+ 
   
   
