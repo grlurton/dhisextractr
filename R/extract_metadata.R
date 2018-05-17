@@ -1,4 +1,4 @@
-#'Generic function to extract json metadta file
+#'Generic function to extract json metadta file from DHIS2 API
 #'
 #' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
 #' @param userID --> Your username in the given DHIS2 setting, as a character string
@@ -17,7 +17,7 @@
 
 #'Generic function to extract DEG meatadata from metadata list
 #'
-#' @param list_metadatt --> The list containing all metadata from a DHIS2.
+#' @param list_metadata --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing DEG metadata 
   
   extract_metadata_DEG <- function(list_metdata) {
@@ -26,7 +26,7 @@
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
     
     DEG_content <- data.frame(matrix(ncol = 2, nrow = 0))
-    colnames(DEG_content) <- c("id", "DEG_id")
+    colnames(DEG_content) <- c("DE_id", "DEG_id")
     
     for(i in 1:nrow(DEG_metadata)) {
       tmp <- DEG_metadata$dataElements[[i]]
@@ -35,29 +35,58 @@
       tmp <- NULL
     }
     
-    colnames(DEG_content) <- c("DE_id", "DEG_id")
-    
     DEG_metadata_short <- DEG_metadata %>% select(name, id) %>% rename(DEG_name = "name")
     DEG_content <- merge(DEG_content, DEG_metadata_short, by.x = "DEG_id", by.y = "id", all.x = T)
     DE_metadata_short <- DE_metadata %>% select(name, id, domainType, zeroIsSignificant, categoryCombo.id) %>% rename(DE_name = "name", DE_id = "id")
-    DE_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "DE_id", by.y = "DE_id", all.x = T)
-    DE_metadata_out <- DE_metadata_out %>% select(DEG_name, DEG_id, DE_name, DE_id, domainType, zeroIsSignificant, categoryCombo.id) %>%
+    DEG_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "DE_id", by.y = "DE_id", all.x = T)
+    DEG_metadata_out <- DEG_metadata_out %>% select(DEG_name, DEG_id, DE_name, DE_id, domainType, zeroIsSignificant, categoryCombo.id) %>%
                                       arrange(DEG_name, DE_name)
-    return(DE_metadata_out)
+    return(DEG_metadata_out)
   } 
   
   
   #'Generic function to extract DataSet meatadata from metadata list
   #'
-  #' @param list_metadatt --> The list containing all metadata from a DHIS2.
+  #' @param list_metadata --> The list containing all metadata from a DHIS2.
   #' @return Returns a dataframe containing DataSet metadata 
   
-  extract_metadata_DataSet <- function(list_metdata) {
-    
-    DEG_metadata <- as.data.frame(list_metdata$dataElementGroups,stringsAsFactors=FALSE)
+  extract_metadata_DataSet <- function(list_metdata=d) {
+    names(d)
+    DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
-    CatCombo_metadata <- as.data.frame(list_metdata$categoryCombos,stringsAsFactors=FALSE)
-    CatComboOpt_metadata <- as.data.frame(list_metdata$categoryOptionCombos,stringsAsFactors=FALSE)
+    
+    DS_content <- data.frame(matrix(ncol = 2, nrow = 0))
+    colnames(DS_content) <- c("DE_id", "DS_id")
+
+    for(i in 1:nrow(DS_metadata)) {
+      tmp <- DS_metadata$dataSetElements[[i]] %>% select(dataElement.id, dataSet.id) ## category combo information is removed (need to be reconsi)
+      colnames(tmp) <- c("DE_id", "DS_id")
+      DS_content <- rbind(DS_content, tmp)
+      tmp <- NULL
+    }
+    
+    DS_metadata_short <- DS_metadata %>% select(name, id) %>% rename(DS_name = "name")
+    DS_content <- merge(DS_content, DS_metadata_short, by.x = "DS_id", by.y = "id", all.x = T)
+    DE_metadata_short <- DE_metadata %>% select(name, id, domainType, zeroIsSignificant, categoryCombo.id) %>% rename(DE_name = "name", DE_id = "id")
+    DS_metadata_out <- merge(DS_content, DE_metadata_short, by.x = "DE_id", by.y = "DE_id", all.x = T)
+    DS_metadata_out <- DS_metadata_out %>% select(DS_name, DS_id, DE_name, DE_id, domainType, zeroIsSignificant, categoryCombo.id) %>%
+      arrange(DS_name, DE_name)
+    return(DS_metadata_out)
+  } 
+  
+  
+  
+#'Generic function to extract OrgUnit meatadata from DHIS2 API
+#'
+#' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
+#' @param userID --> Your username in the given DHIS2 setting, as a character string
+#' @param password --> Your password for this DHIS2 setting, as a character string
+#' @return Returns a dataframe containing DataSet metadata 
+  
+  extract_metadata_DataSet <- function(list_metdata=d) {
+    names(d)
+    DataSet_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
+    DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
     
     DEG_content <- data.frame(matrix(ncol = 2, nrow = 0))
     colnames(DEG_content) <- c("id", "DEG_id")
@@ -79,8 +108,6 @@
       arrange(DEG_name, DE_name)
     return(DE_metadata_out)
   } 
-  
-  
  
   
   
