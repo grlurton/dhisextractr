@@ -112,7 +112,7 @@
   #' @return Returns a dataframe containing Orgunit metadata related to datasets
   
   
-  extract_metadata_DataSet_OrgUnit <- function(list_metadata, OrgUnit_pyr) {
+  extract_metadata_DataSet_OrgUnit <- function(list_metdata, OrgUnit_pyr) {
     
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
 
@@ -133,4 +133,22 @@
     DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T)
     return(DS_metadata_out)
   } 
-  
+
+
+
+flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
+  for (level in unique(metadata_OrgUnit$level)){
+    for(i in seq(1,level-1)){
+      if (i > 0){
+        col1 <- match(i, sort(seq(1,level-1), decreasing = TRUE))
+        metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_name')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1)]
+        metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_id')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1) + 1]
+      }
+    }
+  }
+  if (clean){
+    to_drop <- grep('parent', colnames(metadata_OrgUnit))
+    metadata_OrgUnit <- metadata_OrgUnit[, -to_drop]
+  }
+  return(metadata_OrgUnit)
+}
