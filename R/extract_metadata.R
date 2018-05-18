@@ -37,9 +37,11 @@
     
     DEG_metadata_short <- DEG_metadata %>% select(name, id) %>% rename(DEG_name = "name")
     DEG_content <- merge(DEG_content, DEG_metadata_short, by.x = "DEG_id", by.y = "id", all.x = T)
-    DE_metadata_short <- DE_metadata %>% select(name, id, domainType, zeroIsSignificant, categoryCombo.id) %>% rename(DE_name = "name", DE_id = "id")
-    DEG_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "DE_id", by.y = "DE_id", all.x = T)
-    DEG_metadata_out <- DEG_metadata_out %>% select(DEG_name, DEG_id, DE_name, DE_id, domainType, zeroIsSignificant, categoryCombo.id) %>%
+    DE_metadata_short <- DE_metadata %>% select(name, id, domainType, 
+                                                zeroIsSignificant, 
+                                                categoryCombo.id) %>% rename(DE_name = "name", DE_id = "id")
+    DEG_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "id", by.y = "DE_id", all.x = T)
+    DEG_metadata_out <- DEG_metadata_out %>% select(DEG_name, DEG_id, DE_name, id, domainType, zeroIsSignificant, categoryCombo.id) %>%
                                       arrange(DEG_name, DE_name)
     return(DEG_metadata_out)
   } 
