@@ -12,7 +12,7 @@ check_expectations <- function(expectations, data){
   availability_check <- merge(expectations , data  , 
                               by = c('data_element_id', 'period', 'org_unit_id') , 
                               all.x = TRUE)
-  return(check_expectations)
+  return(availability_check)
 }
 
 check_report_completeness <- function(report){
