@@ -70,7 +70,7 @@ period_to_months <- function(period_start, period_end, sep='-'){
 }
 
 
-period_to_quarter <- function(period_start, period_end){
+period_to_quarter <- function(period_start, period_end, sep){
   year_start <- substr(period_start, 1, 4)
   year_end <- substr(period_end, 1, 4)
   years <- seq(year_start, year_end, 1)
