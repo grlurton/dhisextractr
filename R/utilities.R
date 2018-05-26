@@ -106,3 +106,21 @@ load_env <- function(file = '.env'){
     }
   }
 }
+
+
+merge_data_files(data_dir){
+  data_files <- list.files(data_dir)
+  data <- NA                
+  for(dat in seq(1,length(data_files))){
+    temp <- read.csv(paste0(data_dir, data_files[dat]))
+    print(paste0('Merging ',  round(dat / length(data_files)), '% complete'))
+    if(!is.na(data)){
+      cols <- colnames(data)
+      try(data <- rbind(data, temp[,cols]))}
+    if(is.na(data)){
+      data <- temp}
+    rm(temp)
+  }
+  print('Printing the combined data')
+  write.csv(data, paste0(snis_data_dir, '/data.csv'))
+}
