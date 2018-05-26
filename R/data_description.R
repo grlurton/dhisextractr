@@ -28,6 +28,11 @@ check_data_element_availability <- function(report){
   return(1 - (non_reported / n_expected))
 }
 
+get_reporting_facilities <-(report){
+  reporting <- length(unique(as.character(non_reported$org_unit_id)))
+  return(reporting)
+}
+
 
 ## Checking completeness functions
 
