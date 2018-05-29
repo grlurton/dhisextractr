@@ -1,3 +1,6 @@
+require(dplyr)
+require(stringr)
+
 #'Generic function to extract json metadta file from DHIS2 API
 #'
 #' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
@@ -52,7 +55,7 @@
 #' @param list_metadata --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing DataSet metadata 
   
-  extract_metadata_DataSet <- function(list_metdata) {
+  extract_metadata_DS <- function(list_metdata) {
 
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
@@ -88,7 +91,6 @@
   
   extract_metadata_OrgUnit <- function(url, userID, password, list_metdata) {
     
-    require(stringr)
     OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
     OU_metadata$level <- str_count(OU_metadata$path, "/")
     max_level <- max(OU_metadata$level)
@@ -105,14 +107,14 @@
   } 
  
   
-  #'Generic function to show dataset available in Orgunits
-  #'
-  #' @param list_metadata --> The list containing all metadata from a DHIS2
-  #' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
-  #' @return Returns a dataframe containing Orgunit metadata related to datasets
+#'Generic function to show dataset available in Orgunits
+#'
+#' @param list_metadata --> The list containing all metadata from a DHIS2
+#' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
+#' @return Returns a dataframe containing Orgunit metadata related to datasets
   
   
-  extract_metadata_DataSet_OrgUnit <- function(list_metdata, OrgUnit_pyr) {
+  extract_metadata_DS_OrgUnit <- function(list_metdata, OrgUnit_pyr) {
     
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
 
@@ -130,25 +132,35 @@
     DS_metadata_short <- DS_metadata %>% select(name, id) %>% rename(DS_name = "name")
     DS_content <- merge(DS_content, DS_metadata_short, by.x = "DS_id", by.y = "id", all.x = T)
     
-    DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T)
+    DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T) %>% 
+                          rename(OU_level = "level", OU_name = "name") %>%
+                          select(DS_id, DS_name, OU_level, OU_name, OU_id, parent.name, parent.id, parent.parent.name, parent.parent.id, parent.parent.parent.name, parent.parent.parent.id) %>%
+                          arrange(DS_id)
     return(DS_metadata_out)
   } 
 
 
+  
+#'Generic function to show dataset available in Orgunits
+#'
+#' @param list_metadata --> The list containing all metadata from a DHIS2
+#' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
+#' @return Returns a dataframe containing Orgunit metadata related to datasets  
 
-flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
-  for (level in unique(metadata_OrgUnit$level)){
-    for(i in seq(1,level-1)){
-      if (i > 0){
-        col1 <- match(i, sort(seq(1,level-1), decreasing = TRUE))
-        metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_name')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1)]
-        metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_id')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1) + 1]
+  
+  flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
+    for (level in unique(metadata_OrgUnit$level)){
+      for(i in seq(1,level-1)){
+        if (i > 0){
+          col1 <- match(i, sort(seq(1,level-1), decreasing = TRUE))
+          metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_name')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1)]
+          metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_id')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1) + 1]
+        }
       }
     }
+    if (clean){
+      to_drop <- grep('parent', colnames(metadata_OrgUnit))
+      metadata_OrgUnit <- metadata_OrgUnit[, -to_drop]
+    }
+    return(metadata_OrgUnit)
   }
-  if (clean){
-    to_drop <- grep('parent', colnames(metadata_OrgUnit))
-    metadata_OrgUnit <- metadata_OrgUnit[, -to_drop]
-  }
-  return(metadata_OrgUnit)
-}
