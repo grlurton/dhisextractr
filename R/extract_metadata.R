@@ -1,6 +1,3 @@
-require(dplyr)
-require(stringr)
-
 #'Generic function to extract json metadta file from DHIS2 API
 #'
 #' @param url --> The url of the DHIS2 you want to extract data from, as a character string.
@@ -38,14 +35,14 @@ require(stringr)
       tmp <- NULL
     }
     
-    DEG_metadata_short <- DEG_metadata %>% select(name, id) %>% rename(DEG_name = "name")
+    DEG_metadata_short <- DEG_metadata %>% dplyr::select(name, id) %>% dplyr::rename(DEG_name = "name")
     DEG_content <- merge(DEG_content, DEG_metadata_short, by.x = "DEG_id", by.y = "id", all.x = T)
-    DE_metadata_short <- DE_metadata %>% select(name, id, domainType, 
+    DE_metadata_short <- DE_metadata %>% dplyr::select(name, id, domainType, 
                                                 zeroIsSignificant, 
-                                                categoryCombo.id) %>% rename(DE_name = "name", DE_id = "id")
+                                                categoryCombo.id) %>% dplyr::rename(DE_name = "name", DE_id = "id")
     DEG_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "id", by.y = "DE_id", all.x = T)
-    DEG_metadata_out <- DEG_metadata_out %>% select(DEG_name, DEG_id, DE_name, id, domainType, zeroIsSignificant, categoryCombo.id) %>%
-                                      arrange(DEG_name, DE_name)
+    DEG_metadata_out <- DEG_metadata_out %>% dplyr::select(DEG_name, DEG_id, DE_name, id, domainType, zeroIsSignificant, 
+                                                           categoryCombo.id) %>%dplyr::arrange(DEG_name, DE_name)
     return(DEG_metadata_out)
   } 
   
@@ -64,18 +61,19 @@ require(stringr)
     colnames(DS_content) <- c("DE_id", "DS_id")
 
     for(i in 1:nrow(DS_metadata)) {
-      tmp <- DS_metadata$dataSetElements[[i]] %>% select(dataElement.id, dataSet.id) ## category combo information is removed (need to be reconsidered)
+      tmp <- DS_metadata$dataSetElements[[i]] %>% dplyr::select(dataElement.id, 
+                                                                dataSet.id) ## category combo information is removed (need to be reconsidered)
       colnames(tmp) <- c("DE_id", "DS_id")
       DS_content <- rbind(DS_content, tmp)
       tmp <- NULL
     }
     
-    DS_metadata_short <- DS_metadata %>% select(name, id) %>% rename(DS_name = "name")
+    DS_metadata_short <- DS_metadata %>% dplyr::select(name, id) %>% dplyr::rename(DS_name = "name")
     DS_content <- merge(DS_content, DS_metadata_short, by.x = "DS_id", by.y = "id", all.x = T)
-    DE_metadata_short <- DE_metadata %>% select(name, id, domainType, zeroIsSignificant, categoryCombo.id) %>% rename(DE_name = "name", DE_id = "id")
+    DE_metadata_short <- DE_metadata %>% dplyr::select(name, id, domainType, zeroIsSignificant, categoryCombo.id) %>% dplyr::rename(DE_name = "name", DE_id = "id")
     DS_metadata_out <- merge(DS_content, DE_metadata_short, by.x = "DE_id", by.y = "DE_id", all.x = T)
-    DS_metadata_out <- DS_metadata_out %>% select(DS_name, DS_id, DE_name, DE_id, domainType, zeroIsSignificant, categoryCombo.id) %>%
-      arrange(DS_name, DE_name)
+    DS_metadata_out <- DS_metadata_out %>% dplyr::select(DS_name, DS_id, DE_name, DE_id, domainType, zeroIsSignificant, categoryCombo.id) %>%
+      dplyr::arrange(DS_name, DE_name)
     return(DS_metadata_out)
   } 
   
@@ -92,7 +90,7 @@ require(stringr)
   extract_metadata_OrgUnit <- function(url, userID, password, list_metdata) {
     
     OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
-    OU_metadata$level <- str_count(OU_metadata$path, "/")
+    OU_metadata$level <- stringr::str_count(OU_metadata$path, "/")
     max_level <- max(OU_metadata$level)
     parent_string <- paste0(paste(rep("id,name,parent[", max_level-1), collapse = ""), "id,name", paste(rep("]", max_level-1), collapse = ""))
     
@@ -129,12 +127,12 @@ require(stringr)
       tmp <- NULL
     }
     
-    DS_metadata_short <- DS_metadata %>% select(name, id) %>% rename(DS_name = "name")
+    DS_metadata_short <- DS_metadata %>% dplyr::select(name, id) %>% dplyr::rename(DS_name = "name")
     DS_content <- merge(DS_content, DS_metadata_short, by.x = "DS_id", by.y = "id", all.x = T)
     
     DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T) %>% 
-                          rename(OU_level = "level", OU_name = "name") %>%
-                          arrange(DS_id)
+      dplyr::rename(OU_level = "level", OU_name = "name") %>%
+      dplyr::arrange(DS_id)
     return(DS_metadata_out)
   } 
 
@@ -145,21 +143,19 @@ require(stringr)
 #' @param list_metadata --> The list containing all metadata from a DHIS2
 #' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
 #' @return Returns a dataframe containing Orgunit metadata related to datasets  
-
-  
-  flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
-    for (level in unique(metadata_OrgUnit$level)){
-      for(i in seq(1,level-1)){
-        if (i > 0){
-          col1 <- match(i, sort(seq(1,level-1), decreasing = TRUE))
-          metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_name')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1)]
-          metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_id')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1) + 1]
-        }
+flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
+  for (level in unique(metadata_OrgUnit$level)){
+    for(i in seq(1,level-1)){
+      if (i > 0){
+        col1 <- match(i, sort(seq(1,level-1), decreasing = TRUE))
+        metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_name')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1)]
+        metadata_OrgUnit[metadata_OrgUnit$level == level , paste0('level_', i , '_id')] <- metadata_OrgUnit[metadata_OrgUnit$level == level , 4 + 2*(col1 - 1) + 1]
       }
     }
-    if (clean){
-      to_drop <- grep('parent', colnames(metadata_OrgUnit))
-      metadata_OrgUnit <- metadata_OrgUnit[, -to_drop]
-    }
-    return(metadata_OrgUnit)
   }
+  if (clean){
+    to_drop <- grep('parent', colnames(metadata_OrgUnit))
+    metadata_OrgUnit <- metadata_OrgUnit[, -to_drop]
+    }
+  return(metadata_OrgUnit)
+}

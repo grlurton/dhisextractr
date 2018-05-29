@@ -57,7 +57,7 @@ make_shapefiles <- function(formatted_coordinates){
     points_shapefile$lat <- as.numeric(as.character(points_shapefile$lat))
     points_shapefile$long <- as.numeric(as.character(points_shapefile$long))
     ShapeData <- data.frame(org_unit_ID = unique(points_shapefile$id) )
-    points_shapefile <- convert.to.shapefile(points_shapefile, ShapeData, "org_unit_ID", 1)
+    points_shapefile <- shapefiles::convert.to.shapefile(points_shapefile, ShapeData, "org_unit_ID", 1)
   }
 
   if(nrow(poly_shapefile) > 1){
@@ -65,7 +65,7 @@ make_shapefiles <- function(formatted_coordinates){
   poly_shapefile$lat <- as.numeric(as.character(poly_shapefile$lat))
   poly_shapefile$long <- as.numeric(as.character(poly_shapefile$long))
   ShapeData <- data.frame(org_unit_ID = unique(poly_shapefile$id) )
-  poly_shapefile <- convert.to.shapefile(poly_shapefile, ShapeData, "org_unit_ID", 5)
+  poly_shapefile <- shapefiles::convert.to.shapefile(poly_shapefile, ShapeData, "org_unit_ID", 5)
   }
 
   list(points_shapefile , poly_shapefile)
@@ -81,7 +81,7 @@ make_shapefiles <- function(formatted_coordinates){
 #' point organization units. The second element is a shapefile of polygon organization
 #' units.
 extract_geolocalisation <- function(org_units_description){
-  formatted_gps <- ddply(org_units_description , .(id) ,
+  formatted_gps <- plyr::ddply(org_units_description , .(id) ,
                          function(org_units_description){
                            format_GPS(org_units_description)
                            },
@@ -95,12 +95,12 @@ extract_geolocalisation <- function(org_units_description){
 
 
 write_geolocalisation <- function(shapefiles){
-  write.shapefile(shapefiles[[1]], 'map_points', arcgis=T)
-  write.shapefile(shapefiles[[2]], 'map_polygons', arcgis=T)
-  point_read <- readOGR('map_points.shp')
-  poly_read <- readOGR('map_polygons.shp')
-  writeOGR(poly_read, 'map_points.shp', driver="ESRI Shapefile", layer = 'points')
-  writeOGR(poly_read, 'map_points.geoJson', driver="GeoJSON", layer = 'points')
-  writeOGR(poly_read, 'map_polygons.shp', driver="ESRI Shapefile", layer = 'polygons')
-  writeOGR(poly_read, 'map_polygons.geoJson', driver="GeoJSON", layer = 'polygons')
+  shapefiles::write.shapefile(shapefiles[[1]], 'map_points', arcgis=T)
+  shapefiles::write.shapefile(shapefiles[[2]], 'map_polygons', arcgis=T)
+  point_read <- rgdal::readOGR('map_points.shp')
+  poly_read <- rgdal::readOGR('map_polygons.shp')
+  rgdal::writeOGR(poly_read, 'map_points.shp', driver="ESRI Shapefile", layer = 'points')
+  rgdal::writeOGR(poly_read, 'map_points.geoJson', driver="GeoJSON", layer = 'points')
+  rgdal::writeOGR(poly_read, 'map_polygons.shp', driver="ESRI Shapefile", layer = 'polygons')
+  rgdal::writeOGR(poly_read, 'map_polygons.geoJson', driver="GeoJSON", layer = 'polygons')
 }
