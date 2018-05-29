@@ -7,3 +7,5 @@ packrat/lib*/
 packrat/src/
 *.Rproj
 .Rproj.user
+
+\.env

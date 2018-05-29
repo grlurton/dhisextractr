@@ -1,6 +1,6 @@
 #'Creating the data call adress
 #'
-#' \code{make_extract_call} creates a url used to call some data
+#' \code{make__data_set_extract_call} creates a url used to call some data
 #'
 #' @param base_url The base url of the DHIS2 setting
 #' @param data_sets A table of data sets, as extracted by \link{extract_dhis_datasets}
@@ -43,16 +43,16 @@ make_data_element_extract_call <- function (base_url, data_elements, org_units, 
 #' period , org_unit_ID , value and category.
 extract_data <- function(url_call , userID , password){
   pass <- paste(userID , password , sep = ':')
-  response<-getURL(url_call , userpwd=pass , httpauth = 1L ,
+  response<-RCurl::getURL(url_call , userpwd=pass , httpauth = 1L ,
                    header=FALSE , ssl.verifypeer = FALSE)
-  parsed_page <- fromJSON(response)
+  parsed_page <- jsonlite::fromJSON(response)
   if(length(parsed_page) > 0){
     if('rows' %in% names(parsed_page)){
       out <- data.frame(parsed_page$rows)
       colnames(out) <- c('data_element_ID', 'org_unit_ID', 'period', 'value')
     }
     if('dataValues' %in% names(parsed_page)){
-      out <- ldply(parsed_page$dataValues, data.frame)
+      out <- plyr::ldply(parsed_page$dataValues, data.frame)
     }
     return(out)
   }
@@ -63,8 +63,8 @@ extract_data <- function(url_call , userID , password){
 #' \code{extract_all_data} Extracts a data based on list of data sets, organisation units, #' and a period.Can be used to make complete extraction.
 #'
 #' @param base_url The base url of the DHIS2 setting
-#' @param data_sets A table of data sets, as extracted by \link{extract_dhis_datasets}
-#' @param org_unit A table of organization units, as extracted by \link{extract_org_unit}
+#' @param data_sets A table of data sets, as extracted
+#' @param org_unit A table of organization units, as extracted
 #' @param period_start Date of the beginning of the period from which to extract data
 #' @param period_end Date of the end of the period from which to extract data
 #' @param userID your username in the given DHIS2 setting, as a character string
@@ -88,7 +88,7 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
   if(period_type == 'month'){
     period_for_call <- period_to_months(period[1], period[2])
   }
-  extracted_data <- ddply(org_units, .(group), function(org_units) {
+  extracted_data <- plyr::ddply(org_units, .(group), function(org_units) {
     time_remaining <- time_env$time_remaining
     print(paste("Group", unique(org_units$group), "of", N_groups,
                 sep = " "))
