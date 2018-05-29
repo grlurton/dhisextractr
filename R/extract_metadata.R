@@ -94,11 +94,11 @@ require(stringr)
     OU_metadata <- as.data.frame(list_metdata$organisationUnits, stringsAsFactors=FALSE)
     OU_metadata$level <- str_count(OU_metadata$path, "/")
     max_level <- max(OU_metadata$level)
-    parent_string <- paste0(paste(rep("id,name,parent[", max_level-2), collapse = ""), "id,name", paste(rep("]", max_level-2), collapse = ""))
+    parent_string <- paste0(paste(rep("id,name,parent[", max_level-1), collapse = ""), "id,name", paste(rep("]", max_level-1), collapse = ""))
     
     tmp_url <- paste0(url,"/api/organisationUnits.json?fields=level,",parent_string,"&paging=false")
     r <- httr::GET(tmp_url, httr::authenticate(userID,password),
-                   httr::timeout(60))
+                   httr::timeout(100))
     r <- httr::content(r, "text")
     d <- jsonlite::fromJSON(r, flatten=TRUE)
     
@@ -134,7 +134,6 @@ require(stringr)
     
     DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T) %>% 
                           rename(OU_level = "level", OU_name = "name") %>%
-                          select(DS_id, DS_name, OU_level, OU_name, OU_id, parent.name, parent.id, parent.parent.name, parent.parent.id, parent.parent.parent.name, parent.parent.parent.id) %>%
                           arrange(DS_id)
     return(DS_metadata_out)
   } 
