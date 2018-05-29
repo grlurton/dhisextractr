@@ -70,7 +70,7 @@ period_to_months <- function(period_start, period_end, sep='-'){
 }
 
 
-period_to_quarter <- function(period_start, period_end){
+period_to_quarter <- function(period_start, period_end, sep){
   year_start <- substr(period_start, 1, 4)
   year_end <- substr(period_end, 1, 4)
   years <- seq(year_start, year_end, 1)
@@ -105,4 +105,22 @@ load_env <- function(file = '.env'){
       assign(obj[[1]][1], obj[[1]][2] , envir=globalenv())
     }
   }
+}
+
+
+merge_data_files(data_dir){
+  data_files <- list.files(data_dir)
+  data <- NA                
+  for(dat in seq(1,length(data_files))){
+    temp <- read.csv(paste0(data_dir, data_files[dat]))
+    print(paste0('Merging ',  round(dat / length(data_files)), '% complete'))
+    if(!is.na(data)){
+      cols <- colnames(data)
+      try(data <- rbind(data, temp[,cols]))}
+    if(is.na(data)){
+      data <- temp}
+    rm(temp)
+  }
+  print('Printing the combined data')
+  write.csv(data, paste0(snis_data_dir, '/data.csv'))
 }

@@ -72,7 +72,8 @@ extract_data <- function(url_call , userID , password){
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
 extract_all_data <- function (base_url, data_sets, org_units, period,
-          pace = 1, userID, password, update_date = NULL , type_extract = 'ds', period_type = 'quarter'){
+          pace = 1, userID, password, update_date = NULL , type_extract = 'ds', 
+          period_type = 'quarter', data_dir){
   N_units <- length(org_units)
   n_calls <- ceiling(N_units/pace)
   group <- sort(rep(seq(n_calls), pace))[1:N_units]
@@ -117,6 +118,7 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
     plot(seq(1, N_groups), c(seq, rep(NA, N_groups - unique(org_units$group))),
          ylim = c(0, max(seq)), xlab = "Group", ylab = "Remaining Time Estimation (Hours)")
     assign("time_remaining_seq", seq, envir = time_env)
+    write.csv(out, paste0(data_dir, paste0('/data_',unique(org_units$group) ,'.csv')))
     out
   })
   extracted_data
