@@ -1,33 +1,44 @@
 context('Testing basic data extraction functionnalities')
-library(RCurl)
-library(XML)
 
-base_url <- 'https://play.dhis2.org/2.29'
-password = 'district'
-userID = 'admin'
+load_env("../../.env")
 
-dhis_urls <- make_dhis_urls(base_url)
+## EXTRACT LIST OF METADATA FROM API
+print("Extracting Metadata")
+metadata <- extract_metdata(url=snis_url, userID = snis_login, password = snis_password)
 
-test_that("dhis urls are properly made",
-          {expect_equal(as.character(dhis_urls$data_sets_url[1]),
-                        'https://play.dhis2.org/2.29/api/dataSets.xml')
-            })
+test_that("Metadata well extracted",
+          {expect_is(metadata, 'list' )
+            expect_gte(length(metadata), 0)})
 
+## EXTRACT DEG AND DS METADATA
+DEG_metadata  <- extract_metadata_DEG(metadata)
+DS_metadata <-  extract_metadata_DS(metadata)
 
-dataset_url <- as.character(dhis_urls$data_sets_url[1])
-root <- parse_page(dataset_url, userID, password)
-
-test_that("properly reading datasets",
-          {expect_is(root[0], "XMLNodeList")})
-
-datasets <- extract_dhis_datasets(dataset_url ,
-                                userID ,
-                                password)
-
-test_that("extracting data sets",
-          {expect_is(datasets, 'data.frame' )
-            expect_gte(nrow(datasets), 0)})
+test_that("Data Elements metadata well extracted",
+          {expect_is(DEG_metadata, 'data.frame')})
+          
+test_that("Data Sets metadata well extracted",
+          {expect_is(DS_metadata, 'data.frame')})
 
 
+## EXTRACT ORGUNIT METADATA FROM API
+OU_metadata <- extract_metadata_OrgUnit(url=snis_url, userID = snis_login, password = snis_password, 
+                                        list_metdata = metadata)
+OU_metadata_flat <- flatten_hierarchy(OU_metadata)
+
+test_that("Organisation Units metadata well extracted",
+          {expect_is(OU_metadata, 'data.frame')})
+
+n_units <- nrow(OU_metadata)
+
+test_that("Data Sets metadata well extracted",
+          {expect_is(OU_metadata_flat, 'data.frame')
+            expect_equal(nrow(OU_metadata_flat), n_units)})
+
+## EXTRACT ORGUNIT METADATA FROM API
+OU_metadata_DSinfo <- extract_metadata_DS_OrgUnit(metadata, OU_metadata)
+
+test_that("Organisation Units DataSets well extracted",
+          {expect_is(OU_metadata, 'data.frame')})
 
 
