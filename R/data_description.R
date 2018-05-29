@@ -36,21 +36,21 @@ get_reporting_facilities <-(report){
 
 ## Checking completeness functions
 
-mean_by_zone 
+#mean_by_zone 
 
-check_data_distribution <- function(report){
-  nat_mean <- mean(report$value)
-}
+#check_data_distribution <- function(report){
+#  nat_mean <- mean(report$value)
+#}
 
 ## Execute on slices
 
 ## Produce outputs
 
-make_map
+#make_map
 
-make_resume 
+#make_resume 
 
-print_table
+#print_table
 
-make_timeline
+#make_timeline
 
