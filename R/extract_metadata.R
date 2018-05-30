@@ -15,12 +15,53 @@
   }
   
 
+#'Generic function to extract Category combo meatadata from metadata list
+#'
+#' @param list_metadata --> The list containing all metadata from a DHIS2.
+#' @return Returns a dataframe containing Category combo metadata   
+  
+  extract_metadata_CC <- function(list_metdata) {
+    
+    CatComboOpt_metadata <- as.data.frame(list_metdata$categoryOptionCombos,stringsAsFactors=FALSE)
+    CatComboOpt_metadata_short <- CatComboOpt_metadata %>% select(id, name, categoryCombo.id) %>% rename(CatComboOpt_id="id", CatComboOpt_name="name", CatCombo_id="categoryCombo.id")
+    CatOpt_metadata <- as.data.frame(list_metdata$categoryOptions,stringsAsFactors=FALSE)
+    CatOpt_metadata_short <- CatOpt_metadata %>% select(id, name)
+    
+    CatCombo_content <- data.frame(matrix(ncol = 3, nrow = 0))
+    for(i in 1:nrow(CatComboOpt_metadata)) {
+      tmp <- CatComboOpt_metadata$categoryOptions[[i]]
+      tmp$col_id <- 1:nrow(tmp)
+      tmp$CatComboOpt_id <- CatComboOpt_metadata$id[i]
+      CatCombo_content <- rbind(CatCombo_content, tmp)
+      tmp <- NULL
+    }
+    CatCombo_content <- CatCombo_content %>% rename(CatOpt_id="id")
+    
+    tmp_wide <- reshape(CatCombo_content, idvar = "CatComboOpt_id", timevar = "col_id", direction = "wide")
+    tmp_width <- ncol(tmp_wide)
+    tmp_cols <- c(0)
+    for(i in 1:(tmp_width-1)){
+      tmp_wide <- merge(tmp_wide, CatOpt_metadata_short, by.x = paste0("CatOpt_id.", i), by.y = "id", all.x = T)
+      colnames(tmp_wide)[colnames(tmp_wide)=="name"] <- paste0("CatOpt_name.", i)
+      tmp_cols <- c(tmp_cols, i, -i)
+    }
+    tmp_cols <- tmp_cols + tmp_width
+    tmp_wide <- tmp_wide[,tmp_cols]
+    
+    CC_metadata_out <- merge(CatComboOpt_metadata_short, tmp_wide, by.x = "CatComboOpt_id", by.y = "CatComboOpt_id", all.x = T) %>% arrange(CatCombo_id)
+    CC_metadata_out[,c("CatComboOpt_id","CatComboOpt_name","CatCombo_id")] <- CC_metadata_out[,c("CatCombo_id","CatComboOpt_id","CatComboOpt_name")]
+    
+    return(DEG_metadata_out)
+  }
+  
+  
+    
 #'Generic function to extract DEG meatadata from metadata list
 #'
 #' @param list_metadata --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing DEG metadata 
   
-  extract_metadata_DEG <- function(list_metdata) {
+  extract_metadata_DEG <- function(list_metdata=d) {
     
     DEG_metadata <- as.data.frame(list_metdata$dataElementGroups,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
