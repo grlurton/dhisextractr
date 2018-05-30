@@ -20,7 +20,7 @@
 #' @param list_metadata --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing Category combo metadata   
   
-  extract_metadata_CC <- function(list_metdata) {
+  extract_metadata_CC <- function(list_metdata=d) {
     
     CatComboOpt_metadata <- as.data.frame(list_metdata$categoryOptionCombos,stringsAsFactors=FALSE)
     CatComboOpt_metadata_short <- CatComboOpt_metadata %>% select(id, name, categoryCombo.id) %>% rename(CatComboOpt_id="id", CatComboOpt_name="name", CatCombo_id="categoryCombo.id")
@@ -49,7 +49,9 @@
     tmp_wide <- tmp_wide[,tmp_cols]
     
     CC_metadata_out <- merge(CatComboOpt_metadata_short, tmp_wide, by.x = "CatComboOpt_id", by.y = "CatComboOpt_id", all.x = T) %>% arrange(CatCombo_id)
-    CC_metadata_out[,c("CatComboOpt_id","CatComboOpt_name","CatCombo_id")] <- CC_metadata_out[,c("CatCombo_id","CatComboOpt_id","CatComboOpt_name")]
+    col_names <- colnames(CC_metadata_out)
+    CC_metadata_out[,c(1,2,3)] <- CC_metadata_out[,c(3,1,2)]
+    colnames(CC_metadata_out)[c(1,2,3)] <- col_names[c(3,1,2)]
     
     return(CC_metadata_out)
   }
