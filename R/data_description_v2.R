@@ -41,6 +41,8 @@
     tmp_exp2 <- tmp_exp1[rep(rownames(tmp_exp1) , length(periods)) , ]
     tmp_exp2$period <- periods
     
+    tmp_exp2 <- tmp_exp2 %>% arrange(OU_id, period)
+    
     return(tmp_exp2)
     
   } 
