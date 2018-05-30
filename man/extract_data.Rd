@@ -7,7 +7,7 @@
 extract_data(url_call, userID, password)
 }
 \arguments{
-\item{url_call}{A data calling url as made by \link{make_extract_call}}
+\item{url_call}{A data calling url as made by \link{make_data_set_extract_call}}
 
 \item{userID}{your username in the given DHIS2 setting, as a character string}
 
