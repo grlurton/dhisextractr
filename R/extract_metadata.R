@@ -151,11 +151,11 @@
 #'Generic function to show dataset available in Orgunits
 #'
 #' @param list_metadata --> The list containing all metadata from a DHIS2
-#' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
+#' @param metadata_OrgUnit --> The dataframe containing Orgunit metadata (should be the ouput of "extract_metadata_OrgUnit" function)
 #' @return Returns a dataframe containing Orgunit metadata related to datasets
   
   
-  extract_metadata_DS_OrgUnit <- function(list_metdata, OrgUnit_pyr) {
+  extract_metadata_DS_OrgUnit <- function(list_metdata, metadata_OrgUnit) {
     
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
 
@@ -173,7 +173,7 @@
     DS_metadata_short <- DS_metadata %>% dplyr::select(name, id) %>% dplyr::rename(DS_name = "name")
     DS_content <- merge(DS_content, DS_metadata_short, by.x = "DS_id", by.y = "id", all.x = T)
     
-    DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T) %>% 
+    DS_metadata_out <- merge(DS_content, metadata_OrgUnit, by.x = "OU_id", by.y = "id", all.x = T) %>% 
       dplyr::rename(OU_level = "level", OU_name = "name") %>%
       dplyr::arrange(DS_id)
     return(DS_metadata_out)
@@ -181,12 +181,12 @@
 
 
   
-#'Generic function to show dataset available in Orgunits
+#'Generic function to show reshape the orgUnit hierarchy presentation
 #'
-#' @param list_metadata --> The list containing all metadata from a DHIS2
-#' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
-#' @return Returns a dataframe containing Orgunit metadata related to datasets  
-flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
+#' @param metadata_OrgUnit --> The dataframe containing Orgunit metadata (should be the ouput of "extract_metadata_OrgUnit" function)
+#' @return Returns a dataframe containing the same Orgunit metadata but with levels as columns (instead of parents) 
+
+  flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
   for (level in unique(metadata_OrgUnit$level)){
     for(i in seq(1,level-1)){
       if (i > 0){

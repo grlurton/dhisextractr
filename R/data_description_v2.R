@@ -1,35 +1,9 @@
-
+#'Generic function to build expactations for all datasets
+#'
+#' @param dataset_metadata --> The dataframe containing dataset metadata (should be the ouput of "extract_metadata_DS" function)
+#' @param catcombo_metadata --> The dataframe containing dataset metadata (should be the ouput of "extract_metadata_DS" function)
+#' @return Returns a dataframe containing the number of values expected in a dataset
   
-  
-  setkey(dcir_prs, "key_jointure")
-  prs_ete <- merge(dcir_prs, dcir_ete, all.x = TRUE)
-  
-  consult <- as.data.table(consult)
-  cols <- colnames(consult)
-  agg_cols <- cols[-which(cols == "PRS_ACT_QTE" | cols =="PSE_SPE_COD" | cols =="PSE_STJ_COD" | cols =="PRS_PDS_QCP")]
-  # agg_cols: "NUMERO_ENQ"  "EXE_SOI_DTD" "EXE_SOI_DTF" "PFS_EXE_NUM" "PFS_PRE_NUM" "PSP_SPE_COD" "PSP_STJ_COD" 
-  # "ETB_PRE_FIN" "PRS_MTT_NUM" "PRS_NAT_REF" "ORG_CLE_NUM" "PRE_PRE_DTD" "ETB_EXE_FIN"
-  consult <- consult[, .(PRS_ACT_QTE = sum(PRS_ACT_QTE), PSE_SPE_COD = paste0(PSE_SPE_COD, collapse = "_"), PSE_STJ_COD = paste0(PSE_STJ_COD, collapse = "_"), PRS_PDS_QCP = paste0(PRS_PDS_QCP, collapse = "_")), by=agg_cols]
-  
-  
-  
-  library(data.table)
-  
-  OU_metadata_DSinfo <- as.data.table(OU_metadata_DSinfo)
-  DS_metadata <- as.data.table(DS_metadata)
-  
-  setkey(OU_metadata_DSinfo, "DS_id")
-  setkey(DS_metadata, "DS_id")
-  
-  to_get_full <- merge(DS_metadata, OU_metadata_DSinfo, all = TRUE, allow.cartesian=TRUE)
-
-  names(OU_metadata_DSinfo)
-  
-  
-  
-  
-  
-############################################################################################################
   
   # expectations per dataset
   
