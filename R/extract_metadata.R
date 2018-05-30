@@ -51,7 +51,7 @@
     CC_metadata_out <- merge(CatComboOpt_metadata_short, tmp_wide, by.x = "CatComboOpt_id", by.y = "CatComboOpt_id", all.x = T) %>% arrange(CatCombo_id)
     CC_metadata_out[,c("CatComboOpt_id","CatComboOpt_name","CatCombo_id")] <- CC_metadata_out[,c("CatCombo_id","CatComboOpt_id","CatComboOpt_name")]
     
-    return(DEG_metadata_out)
+    return(CC_metadata_out)
   }
   
   
