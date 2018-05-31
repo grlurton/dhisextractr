@@ -7,8 +7,7 @@
 format_GPS(org_units_description)
 }
 \arguments{
-\item{org_units_description}{A data frame of organization descriptions as extracted with
-\link{extract_org_unit}.}
+\item{org_units_description}{A data frame of organization descriptions as extracted .}
 }
 \value{
 Returns a list of data frames in which the columns are the organisation unit ID,

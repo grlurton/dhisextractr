@@ -4,19 +4,20 @@
 \alias{extract_all_data}
 \title{Extracting multiple sets of data value}
 \usage{
-extract_all_data(base_url, data_sets, org_units, deb_period, end_period,
-  pace = 1, userID, password, update_date)
+extract_all_data(base_url, data_sets, org_units, period, pace = 1, userID,
+  password, update_date = NULL, type_extract = "ds",
+  period_type = "quarter", data_dir)
 }
 \arguments{
 \item{base_url}{The base url of the DHIS2 setting}
 
-\item{data_sets}{A table of data sets, as extracted by \link{extract_dhis_datasets}}
+\item{data_sets}{A table of data sets, as extracted}
 
 \item{userID}{your username in the given DHIS2 setting, as a character string}
 
 \item{password}{your password for this DHIS2 setting, as a character string}
 
-\item{org_unit}{A table of organization units, as extracted by \link{extract_org_unit}}
+\item{org_unit}{A table of organization units, as extracted}
 
 \item{period_start}{Date of the beginning of the period from which to extract data}
 

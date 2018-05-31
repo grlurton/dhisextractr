@@ -3,8 +3,8 @@
 #' \code{make__data_set_extract_call} creates a url used to call some data
 #'
 #' @param base_url The base url of the DHIS2 setting
-#' @param data_sets A table of data sets, as extracted by \link{extract_dhis_datasets}
-#' @param org_unit A table of organization units, as extracted by \link{extract_org_unit}
+#' @param data_sets A table of data sets, as extracted
+#' @param org_unit A table of organization units, as extracted
 #' @param period_start Date of the beginning of the period from which to extract data
 #' @param period_end Date of the end of the period from which to extract data
 #' @return Returns an url that calls on the data to be extracted based on inputted
@@ -36,7 +36,7 @@ make_data_element_extract_call <- function (base_url, data_elements, org_units, 
 #'
 #' \code{extract_data} extracts data based on a url call
 #'
-#' @param url_call A data calling url as made by \link{make_extract_call}
+#' @param url_call A data calling url as made by \link{make_data_set_extract_call}
 #' @param userID your username in the given DHIS2 setting, as a character string
 #' @param password your password for this DHIS2 setting, as a character string
 #' @return Returns a dataframe with one data value by line, and columns data_element_ID ,

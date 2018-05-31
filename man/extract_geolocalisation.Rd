@@ -7,8 +7,7 @@
 extract_geolocalisation(org_units_description)
 }
 \arguments{
-\item{org_units_description}{A data frame of organization descriptions as extracted with
-\link{extract_org_unit}.}
+\item{org_units_description}{A data frame of organization descriptions as extracted.}
 }
 \value{
 Returns a list of two elements. The first element of the list is a shapefile of

@@ -1,6 +1,6 @@
 context('Testing basic data extraction functionnalities')
 
-load_env("../../.env")
+load_env(".env")
 
 ## EXTRACT LIST OF METADATA FROM API
 print("Extracting Metadata")

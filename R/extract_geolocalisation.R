@@ -2,8 +2,7 @@
 #'
 #' \code{format_GPS} extracts GPS coordinates for extracted organization units
 #'
-#' @param org_units_description A data frame of organization descriptions as extracted with
-#' \link{extract_org_unit}.
+#' @param org_units_description A data frame of organization descriptions as extracted .
 #' @return Returns a list of data frames in which the columns are the organisation unit ID,
 #' the longitude and the latitude of the organisation units. Each element of the list is an
 #' organization unit.
@@ -75,8 +74,7 @@ make_shapefiles <- function(formatted_coordinates){
 #'
 #' \code{extract_geolocalisation} makes shapefiles from extracted organization units
 #'
-#' @param org_units_description A data frame of organization descriptions as extracted with
-#' \link{extract_org_unit}.
+#' @param org_units_description A data frame of organization descriptions as extracted.
 #' @return Returns a list of two elements. The first element of the list is a shapefile of
 #' point organization units. The second element is a shapefile of polygon organization
 #' units.
@@ -94,6 +92,11 @@ extract_geolocalisation <- function(org_units_description){
 
 
 
+#'Writing shapefiles for organization units
+#'
+#' \code{write_geolocalisation} makes and writes shapefiles from a list of organization units coordinates.
+#'
+#' @param shapefiles A list of organization units and their GPS coordinates extracted from \link{extract_geolocalisation}.
 write_geolocalisation <- function(shapefiles){
   shapefiles::write.shapefile(shapefiles[[1]], 'map_points', arcgis=T)
   shapefiles::write.shapefile(shapefiles[[2]], 'map_polygons', arcgis=T)
