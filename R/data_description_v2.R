@@ -1,4 +1,4 @@
-#'Generic function to build expactations for all datasets (number of DEs per dataset)
+#'Generic function to build expectations for all datasets (number of DEs per dataset)
 #'
 #' @param dataset_metadata --> The dataframe containing dataset metadata (should be the ouput of "extract_metadata_DS" function)
 #' @param catcombo_metadata --> The dataframe containing dataset metadata (should be the ouput of "extract_metadata_DS" function)
@@ -23,15 +23,15 @@
     
 
   
-#'Generic function to build expactations for all datasets (number of DEs per dataset)
+#'Generic function to build expectations for a scpecifc dataset (for each orgunit and period)
 #'
 #' @param dataset_id --> id of the dataset
 #' @param metadata_OrgUnit_datasetinfo --> The dataframe containing orgunit_dataset metadata (should be the ouput of "extract_metadata_DS_OrgUnit" function)
 #' @param dataset_exp --> The dataframe containing expactations for all datasets (should be the ouput of "build_DS_exp" function)
 #' @param period --> should be a vector with a monthly range such as "c(201701, 201712)"
-#' @return Returns a dataframe with the number of expected values for each OrgUnit, dataset and period
+#' @return Returns a dataframe with the number of expected values for each OrgUnit and period
   
-  build_OU_period_exp <- function(dataset_id, metadata_OrgUnit_datasetinfo, dataset_exp, period) {
+  build_OU_period_exp_DSlevel <- function(dataset_id, metadata_OrgUnit_datasetinfo, dataset_exp, period) {
 
     tmp <- metadata_OrgUnit_datasetinfo %>% filter(DS_id==dataset_id)
     dataset_exp_short <- dataset_exp %>% select(-DS_name)
@@ -48,3 +48,35 @@
   } 
   
   
+  
+  
+#'Generic function to build expectations for a scpecifc dataelement (for each orgunit and period)
+#'
+#' @param dataelement_id --> id of the dataelement
+#' @param metadata_OrgUnit_datasetinfo --> The dataframe containing orgunit_dataset metadata (should be the ouput of "extract_metadata_DS_OrgUnit" function)
+#' @param metadata_dataset --> The dataframe containing dataset metadata (should be the ouput of "extract_metadata_DS" function)
+#' @param metadata_CatCombo --> The dataframe containing CatCombo metadata (should be the ouput of "extract_metadata_CC" function)
+#' @param period --> should be a vector with a monthly range such as "c(201701, 201712)"
+#' @return Returns a dataframe with the number of expected values for each OrgUnit, period and CatCombo
+  
+  build_OU_period_exp_DElevel <- function(dataelement_id, metadata_OrgUnit_datasetinfo, metadata_dataset, metadata_CatCombo, period) {
+    
+    # dataelement_id="UxD03qX5O0t"
+    # metadata_OrgUnit_datasetinfo=OU_metadata_DSinfo
+    # metadata_dataset=DS_metadata
+    # metadata_CatCombo=CC_metadata
+    # period=c("201701", "201803")
+    
+    tmp <- metadata_dataset %>% filter(DE_id==dataelement_id) %>% select(DS_id, DE_name, DE_id, categoryCombo.id)
+    tmp_CatCombo <- merge(tmp, CC_metadata, by.x = "categoryCombo.id", by.y = "CatCombo_id", all.x = T)
+    tmp_exp1 <- merge(metadata_OrgUnit_datasetinfo, tmp_CatCombo, by.x = "DS_id", by.y = "DS_id")
+    
+    periods <- period_to_months(period[1], period[2], "")
+    tmp_exp2 <- tmp_exp1[rep(rownames(tmp_exp1) , length(periods)) , ]
+    tmp_exp2$period <- periods
+    
+    tmp_exp2 <- tmp_exp2 %>% arrange(OU_id, period)
+    
+    return(tmp_exp2)
+    
+  } 
