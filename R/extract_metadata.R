@@ -15,6 +15,84 @@
   }
   
 
+#'Generic function to extract Category combo meatadata from metadata list
+#'
+#' @param list_metadata --> The list containing all metadata from a DHIS2.
+#' @return Returns a dataframe containing Category combo metadata   
+  
+  extract_metadata_CC <- function(list_metdata) {
+    
+    CatCombo_metadata <- as.data.frame(list_metdata$categoryCombos,stringsAsFactors=FALSE)
+    CatComboOpt_metadata <- as.data.frame(list_metdata$categoryOptionCombos,stringsAsFactors=FALSE)
+    CatComboOpt_metadata_short <- CatComboOpt_metadata %>% select(id, name, categoryCombo.id) %>% rename(CatComboOpt_id="id", CatComboOpt_name="name", CatCombo_id="categoryCombo.id")
+    CatOpt_metadata <- as.data.frame(list_metdata$categoryOptions,stringsAsFactors=FALSE)
+    CatOpt_metadata_short <- CatOpt_metadata %>% select(id, name)
+    Cat_metadata <- as.data.frame(list_metdata$categories,stringsAsFactors=FALSE)
+
+    CatCombo_content <- data.frame(matrix(ncol = 3, nrow = 0))
+    for(i in 1:nrow(CatComboOpt_metadata)) {
+      tmp <- CatComboOpt_metadata$categoryOptions[[i]]
+      tmp$CatComboOpt_id <- CatComboOpt_metadata$id[i]
+      tmp$CatCombo_id <- CatComboOpt_metadata$categoryCombo.id[i]
+      CatCombo_content <- rbind(CatCombo_content, tmp)
+      tmp <- NULL
+    }
+    CatCombo_content <- CatCombo_content %>% rename(CatOpt_id="id") %>% arrange(CatCombo_id, CatOpt_id)
+    
+    CatCombo_Cat <- data.frame(matrix(ncol = 2, nrow = 0))
+    for(i in 1:nrow(CatCombo_metadata)) {
+      tmp <- CatCombo_metadata$categories[[i]]
+      tmp$CatCombo_id <- CatCombo_metadata$id[i]
+      CatCombo_Cat <- rbind(CatCombo_Cat, tmp)
+      tmp <- NULL
+    }
+    CatCombo_Cat <- CatCombo_Cat %>% rename(Cat_id="id") %>% arrange(CatCombo_id, Cat_id)
+    
+    Cat_content <- data.frame(matrix(ncol = 2, nrow = 0))
+    for(i in 1:nrow(Cat_metadata)) {
+      tmp <- Cat_metadata$categoryOptions[[i]]
+      tmp$Cat_id <- Cat_metadata$id[i]
+      Cat_content <- rbind(Cat_content, tmp)
+      tmp <- NULL
+    }
+    Cat_content <- Cat_content %>% rename(CatOpt_id="id") %>% arrange(Cat_id)
+    
+    CatCombo_Cat_CatOpt <- merge(CatCombo_Cat, Cat_content, by = "Cat_id", all.x = T) %>% arrange(CatCombo_id, Cat_id, CatOpt_id)
+    CatCombo_content_Cat <- merge(CatCombo_content, CatCombo_Cat_CatOpt, by = c("CatCombo_id", "CatOpt_id"), all.x = T) %>% arrange(CatCombo_id, Cat_id, CatOpt_id)
+
+    CatCombo_content_Cat$col_num <- NA
+    CatCombo_content_Cat$col_num[1] <- 1
+    for(i in 2:nrow(CatCombo_content_Cat)) {
+      if(CatCombo_content_Cat$CatCombo_id[i]==CatCombo_content_Cat$CatCombo_id[i-1]) {
+        if(is.na(CatCombo_content_Cat$Cat_id[i])) { CatCombo_content_Cat$col_num[i] <- 1 }
+        else {
+          if(CatCombo_content_Cat$Cat_id[i]==CatCombo_content_Cat$Cat_id[i-1]) { CatCombo_content_Cat$col_num[i] <- CatCombo_content_Cat$col_num[i-1] }
+          else { CatCombo_content_Cat$col_num[i] <- CatCombo_content_Cat$col_num[i-1] + 1 }
+        }
+      }
+      else { CatCombo_content_Cat$col_num[i] <- 1 }
+    }
+    
+    CatCombo_content_Cat <- CatCombo_content_Cat %>% select(-Cat_id)
+    
+    tmp_wide <- reshape(CatCombo_content_Cat, idvar = c("CatCombo_id", "CatComboOpt_id"), timevar = "col_num", direction = "wide")
+    tmp_width <- ncol(tmp_wide)
+    tmp_cols <- c(-1, 0)
+    for(i in 1:(tmp_width-2)){
+      tmp_wide <- merge(tmp_wide, CatOpt_metadata_short, by.x = paste0("CatOpt_id.", i), by.y = "id", all.x = T)
+      colnames(tmp_wide)[colnames(tmp_wide)=="name"] <- paste0("CatOpt_name.", i)
+      tmp_cols <- c(tmp_cols, i, -i-1)
+    }
+    tmp_cols <- tmp_cols + tmp_width
+    tmp_wide <- tmp_wide[,tmp_cols]
+    
+    CC_metadata_out <- tmp_wide %>% arrange(CatCombo_id)
+      
+    return(CC_metadata_out)
+  }
+  
+  
+    
 #'Generic function to extract DEG meatadata from metadata list
 #'
 #' @param list_metadata --> The list containing all metadata from a DHIS2.
@@ -108,11 +186,11 @@
 #'Generic function to show dataset available in Orgunits
 #'
 #' @param list_metadata --> The list containing all metadata from a DHIS2
-#' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
+#' @param metadata_OrgUnit --> The dataframe containing Orgunit metadata (should be the ouput of "extract_metadata_OrgUnit" function)
 #' @return Returns a dataframe containing Orgunit metadata related to datasets
   
   
-  extract_metadata_DS_OrgUnit <- function(list_metdata, OrgUnit_pyr) {
+  extract_metadata_DS_OrgUnit <- function(list_metdata, metadata_OrgUnit) {
     
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
 
@@ -130,7 +208,7 @@
     DS_metadata_short <- DS_metadata %>% dplyr::select(name, id) %>% dplyr::rename(DS_name = "name")
     DS_content <- merge(DS_content, DS_metadata_short, by.x = "DS_id", by.y = "id", all.x = T)
     
-    DS_metadata_out <- merge(DS_content, OrgUnit_pyr, by.x = "OU_id", by.y = "id", all.x = T) %>% 
+    DS_metadata_out <- merge(DS_content, metadata_OrgUnit, by.x = "OU_id", by.y = "id", all.x = T) %>% 
       dplyr::rename(OU_level = "level", OU_name = "name") %>%
       dplyr::arrange(DS_id)
     return(DS_metadata_out)
@@ -138,12 +216,12 @@
 
 
   
-#'Generic function to show dataset available in Orgunits
+#'Generic function to show reshape the orgUnit hierarchy presentation
 #'
-#' @param list_metadata --> The list containing all metadata from a DHIS2
-#' @param OrgUnit_pyr --> The dataframe containing Orgunit pyramid (should be the ouput of "extract_metadata_OrgUnit" function)
-#' @return Returns a dataframe containing Orgunit metadata related to datasets  
-flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
+#' @param metadata_OrgUnit --> The dataframe containing Orgunit metadata (should be the ouput of "extract_metadata_OrgUnit" function)
+#' @return Returns a dataframe containing the same Orgunit metadata but with levels as columns (instead of parents) 
+
+  flatten_hierarchy <- function(metadata_OrgUnit, clean = TRUE){
   for (level in unique(metadata_OrgUnit$level)){
     for(i in seq(1,level-1)){
       if (i > 0){
