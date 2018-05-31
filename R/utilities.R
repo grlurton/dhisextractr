@@ -108,7 +108,7 @@ load_env <- function(file = '.env'){
 }
 
 
-merge_data_files(data_dir){
+merge_data_files <- function(data_dir){
   data_files <- list.files(data_dir)
   data <- NA                
   for(dat in seq(1,length(data_files))){

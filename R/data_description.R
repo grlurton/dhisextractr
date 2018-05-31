@@ -28,7 +28,7 @@ check_data_element_availability <- function(report){
   return(1 - (non_reported / n_expected))
 }
 
-get_reporting_facilities <-(report){
+get_reporting_facilities <- function (report){
   reporting <- length(unique(as.character(non_reported$org_unit_id)))
   return(reporting)
 }

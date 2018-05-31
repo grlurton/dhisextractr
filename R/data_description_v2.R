@@ -35,7 +35,7 @@
 
     tmp <- metadata_OrgUnit_datasetinfo %>% filter(DS_id==dataset_id)
     dataset_exp_short <- dataset_exp %>% select(-DS_name)
-    tmp_exp1 <- merge(tmp, DS_exp_short, by.x = "DS_id", by.y = "DS_id")
+    tmp_exp1 <- merge(tmp, dataset_exp_short, by.x = "DS_id", by.y = "DS_id")
     
     periods <- period_to_months(period[1], period[2], "")
     tmp_exp2 <- tmp_exp1[rep(rownames(tmp_exp1) , length(periods)) , ]

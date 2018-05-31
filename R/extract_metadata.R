@@ -20,39 +20,74 @@
 #' @param list_metadata --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing Category combo metadata   
   
-  extract_metadata_CC <- function(list_metdata=d) {
+  extract_metadata_CC <- function(list_metdata) {
     
+    CatCombo_metadata <- as.data.frame(list_metdata$categoryCombos,stringsAsFactors=FALSE)
     CatComboOpt_metadata <- as.data.frame(list_metdata$categoryOptionCombos,stringsAsFactors=FALSE)
     CatComboOpt_metadata_short <- CatComboOpt_metadata %>% select(id, name, categoryCombo.id) %>% rename(CatComboOpt_id="id", CatComboOpt_name="name", CatCombo_id="categoryCombo.id")
     CatOpt_metadata <- as.data.frame(list_metdata$categoryOptions,stringsAsFactors=FALSE)
     CatOpt_metadata_short <- CatOpt_metadata %>% select(id, name)
-    
+    Cat_metadata <- as.data.frame(list_metdata$categories,stringsAsFactors=FALSE)
+
     CatCombo_content <- data.frame(matrix(ncol = 3, nrow = 0))
     for(i in 1:nrow(CatComboOpt_metadata)) {
       tmp <- CatComboOpt_metadata$categoryOptions[[i]]
-      tmp$col_id <- 1:nrow(tmp)
       tmp$CatComboOpt_id <- CatComboOpt_metadata$id[i]
+      tmp$CatCombo_id <- CatComboOpt_metadata$categoryCombo.id[i]
       CatCombo_content <- rbind(CatCombo_content, tmp)
       tmp <- NULL
     }
-    CatCombo_content <- CatCombo_content %>% rename(CatOpt_id="id")
+    CatCombo_content <- CatCombo_content %>% rename(CatOpt_id="id") %>% arrange(CatCombo_id, CatOpt_id)
     
-    tmp_wide <- reshape(CatCombo_content, idvar = "CatComboOpt_id", timevar = "col_id", direction = "wide")
+    CatCombo_Cat <- data.frame(matrix(ncol = 2, nrow = 0))
+    for(i in 1:nrow(CatCombo_metadata)) {
+      tmp <- CatCombo_metadata$categories[[i]]
+      tmp$CatCombo_id <- CatCombo_metadata$id[i]
+      CatCombo_Cat <- rbind(CatCombo_Cat, tmp)
+      tmp <- NULL
+    }
+    CatCombo_Cat <- CatCombo_Cat %>% rename(Cat_id="id") %>% arrange(CatCombo_id, Cat_id)
+    
+    Cat_content <- data.frame(matrix(ncol = 2, nrow = 0))
+    for(i in 1:nrow(Cat_metadata)) {
+      tmp <- Cat_metadata$categoryOptions[[i]]
+      tmp$Cat_id <- Cat_metadata$id[i]
+      Cat_content <- rbind(Cat_content, tmp)
+      tmp <- NULL
+    }
+    Cat_content <- Cat_content %>% rename(CatOpt_id="id") %>% arrange(Cat_id)
+    
+    CatCombo_Cat_CatOpt <- merge(CatCombo_Cat, Cat_content, by = "Cat_id", all.x = T) %>% arrange(CatCombo_id, Cat_id, CatOpt_id)
+    CatCombo_content_Cat <- merge(CatCombo_content, CatCombo_Cat_CatOpt, by = c("CatCombo_id", "CatOpt_id"), all.x = T) %>% arrange(CatCombo_id, Cat_id, CatOpt_id)
+
+    CatCombo_content_Cat$col_num <- NA
+    CatCombo_content_Cat$col_num[1] <- 1
+    for(i in 2:nrow(CatCombo_content_Cat)) {
+      if(CatCombo_content_Cat$CatCombo_id[i]==CatCombo_content_Cat$CatCombo_id[i-1]) {
+        if(is.na(CatCombo_content_Cat$Cat_id[i])) { CatCombo_content_Cat$col_num[i] <- 1 }
+        else {
+          if(CatCombo_content_Cat$Cat_id[i]==CatCombo_content_Cat$Cat_id[i-1]) { CatCombo_content_Cat$col_num[i] <- CatCombo_content_Cat$col_num[i-1] }
+          else { CatCombo_content_Cat$col_num[i] <- CatCombo_content_Cat$col_num[i-1] + 1 }
+        }
+      }
+      else { CatCombo_content_Cat$col_num[i] <- 1 }
+    }
+    
+    CatCombo_content_Cat <- CatCombo_content_Cat %>% select(-Cat_id)
+    
+    tmp_wide <- reshape(CatCombo_content_Cat, idvar = c("CatCombo_id", "CatComboOpt_id"), timevar = "col_num", direction = "wide")
     tmp_width <- ncol(tmp_wide)
-    tmp_cols <- c(0)
-    for(i in 1:(tmp_width-1)){
+    tmp_cols <- c(-1, 0)
+    for(i in 1:(tmp_width-2)){
       tmp_wide <- merge(tmp_wide, CatOpt_metadata_short, by.x = paste0("CatOpt_id.", i), by.y = "id", all.x = T)
       colnames(tmp_wide)[colnames(tmp_wide)=="name"] <- paste0("CatOpt_name.", i)
-      tmp_cols <- c(tmp_cols, i, -i)
+      tmp_cols <- c(tmp_cols, i, -i-1)
     }
     tmp_cols <- tmp_cols + tmp_width
     tmp_wide <- tmp_wide[,tmp_cols]
     
-    CC_metadata_out <- merge(CatComboOpt_metadata_short, tmp_wide, by.x = "CatComboOpt_id", by.y = "CatComboOpt_id", all.x = T) %>% arrange(CatCombo_id)
-    col_names <- colnames(CC_metadata_out)
-    CC_metadata_out[,c(1,2,3)] <- CC_metadata_out[,c(3,1,2)]
-    colnames(CC_metadata_out)[c(1,2,3)] <- col_names[c(3,1,2)]
-    
+    CC_metadata_out <- tmp_wide %>% arrange(CatCombo_id)
+      
     return(CC_metadata_out)
   }
   
@@ -63,7 +98,7 @@
 #' @param list_metadata --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing DEG metadata 
   
-  extract_metadata_DEG <- function(list_metdata=d) {
+  extract_metadata_DEG <- function(list_metdata) {
     
     DEG_metadata <- as.data.frame(list_metdata$dataElementGroups,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
