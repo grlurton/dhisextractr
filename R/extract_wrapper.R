@@ -42,6 +42,7 @@ make_data_element_extract_call <- function (base_url, data_elements, org_units, 
 #' @return Returns a dataframe with one data value by line, and columns data_element_ID ,
 #' period , org_unit_ID , value and category.
 extract_data <- function(url_call , userID , password){
+  out <- NULL
   pass <- paste(userID , password , sep = ':')
   response<-RCurl::getURL(url_call , userpwd=pass , httpauth = 1L ,
                    header=FALSE , ssl.verifypeer = FALSE)
@@ -52,10 +53,13 @@ extract_data <- function(url_call , userID , password){
       colnames(out) <- c('data_element_ID', 'org_unit_ID', 'period', 'value')
     }
     if('dataValues' %in% names(parsed_page)){
-      out <- plyr::ldply(parsed_page$dataValues, data.frame)
+      out <- data.frame(parsed_page$dataValues)
     }
-    return(out)
   }
+  if (is.null(out)){
+    out <- data.frame(out)
+  }
+  return(out)
 }
 
 #'Extracting multiple sets of data value
@@ -89,7 +93,7 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
   if(period_type == 'month'){
     period_for_call <- period_to_months(period[1], period[2])
   }
-  extracted_data <- plyr::ddply(org_units, .(group), function(org_units) {
+  extraction <- function(org_units) {
     time_remaining <- time_env$time_remaining
     print(paste("Group", unique(org_units$group), "of", N_groups,
                 sep = " "))
@@ -120,6 +124,8 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
     assign("time_remaining_seq", seq, envir = time_env)
     write.csv(out, paste0(data_dir, paste0('/data_',unique(org_units$group) ,'.csv')))
     out
-  })
-  extracted_data
+  }
+  
+  extracted_data <- org_units %>% group_by(group) %>% do(extraction(.))
+  return(extracted_data)
 }
