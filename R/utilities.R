@@ -124,3 +124,13 @@ merge_data_files <- function(data_dir){
   print('Printing the combined data')
   write.csv(data, paste0(snis_data_dir, '/data.csv'))
 }
+
+extraction_error <- function(out){
+  for(col in colnames(out)){
+    if(col != 'data_element_ID'){
+      print('sfes')
+      out[,col] <- 'extraction_error'
+    }
+  }
+  #write.csv(out)
+}

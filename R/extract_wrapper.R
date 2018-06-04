@@ -110,9 +110,13 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
       url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
                                                  period_for_call)
     }
-    try({
+    tryCatch({
       out <- extract_data(url_call, userID, password)
-    })
+    },
+    error = function(e){write.table(data.frame(ID = org_units$ID, group = group), 
+                                    paste0(data_dir, '/error.csv'), append=TRUE, 
+                                    col.names = FALSE)}
+    )
     print(paste0(nrow(out), " Data Points Extracted"))
     time_remaining <- difftime(Sys.time(), time_env$start,
                                units = "hours")/unique(org_units$group) * (N_groups -
@@ -123,7 +127,7 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
          ylim = c(0, max(seq)), xlab = "Group", ylab = "Remaining Time Estimation (Hours)")
     assign("time_remaining_seq", seq, envir = time_env)
     write.csv(out, paste0(data_dir, paste0('/data_',unique(org_units$group) ,'.csv')))
-    out
+    return(out)
   }
   
   extracted_data <- org_units %>% group_by(group) %>% do(extraction(.))
