@@ -50,7 +50,7 @@
         tmp <- NULL
       }
     }
-    CatCombo_Cat <- CatCombo_Cat %>% rename(Cat_id="id") %>% dplyr::arrange(CatCombo_id, Cat_id)
+    CatCombo_Cat <- CatCombo_Cat %>% dplyr::rename(Cat_id="id") %>% dplyr::arrange(CatCombo_id, Cat_id)
     
     Cat_content <- data.frame(matrix(ncol = 2, nrow = 0))
     for(i in 1:nrow(Cat_metadata)) {
