@@ -24,9 +24,9 @@
     
     CatCombo_metadata <- as.data.frame(list_metdata$categoryCombos,stringsAsFactors=FALSE)
     CatComboOpt_metadata <- as.data.frame(list_metdata$categoryOptionCombos,stringsAsFactors=FALSE)
-    CatComboOpt_metadata_short <- CatComboOpt_metadata %>% select(id, name, categoryCombo.id) %>% rename(CatComboOpt_id="id", CatComboOpt_name="name", CatCombo_id="categoryCombo.id")
+    CatComboOpt_metadata_short <- CatComboOpt_metadata %>% dplyr::select(id, name, categoryCombo.id) %>% dplyr::rename(CatComboOpt_id="id", CatComboOpt_name="name", CatCombo_id="categoryCombo.id")
     CatOpt_metadata <- as.data.frame(list_metdata$categoryOptions,stringsAsFactors=FALSE)
-    CatOpt_metadata_short <- CatOpt_metadata %>% select(id, name)
+    CatOpt_metadata_short <- CatOpt_metadata %>% dplyr::select(id, name)
     Cat_metadata <- as.data.frame(list_metdata$categories,stringsAsFactors=FALSE)
 
     CatCombo_content <- data.frame(matrix(ncol = 3, nrow = 0))
@@ -37,7 +37,7 @@
       CatCombo_content <- rbind(CatCombo_content, tmp)
       tmp <- NULL
     }
-    CatCombo_content <- CatCombo_content %>% rename(CatOpt_id="id") %>% arrange(CatCombo_id, CatOpt_id)
+    CatCombo_content <- CatCombo_content %>% dplyr::rename(CatOpt_id="id") %>% dplyr::arrange(CatCombo_id, CatOpt_id)
     
     CatCombo_Cat <- data.frame(matrix(ncol = 2, nrow = 0))
     for(i in 1:nrow(CatCombo_metadata)) {
@@ -46,7 +46,7 @@
       CatCombo_Cat <- rbind(CatCombo_Cat, tmp)
       tmp <- NULL
     }
-    CatCombo_Cat <- CatCombo_Cat %>% rename(Cat_id="id") %>% arrange(CatCombo_id, Cat_id)
+    CatCombo_Cat <- CatCombo_Cat %>% rename(Cat_id="id") %>% dplyr::arrange(CatCombo_id, Cat_id)
     
     Cat_content <- data.frame(matrix(ncol = 2, nrow = 0))
     for(i in 1:nrow(Cat_metadata)) {
@@ -55,10 +55,10 @@
       Cat_content <- rbind(Cat_content, tmp)
       tmp <- NULL
     }
-    Cat_content <- Cat_content %>% rename(CatOpt_id="id") %>% arrange(Cat_id)
+    Cat_content <- Cat_content %>% dplyr::rename(CatOpt_id="id") %>% dplyr::arrange(Cat_id)
     
-    CatCombo_Cat_CatOpt <- merge(CatCombo_Cat, Cat_content, by = "Cat_id", all.x = T) %>% arrange(CatCombo_id, Cat_id, CatOpt_id)
-    CatCombo_content_Cat <- merge(CatCombo_content, CatCombo_Cat_CatOpt, by = c("CatCombo_id", "CatOpt_id"), all.x = T) %>% arrange(CatCombo_id, Cat_id, CatOpt_id)
+    CatCombo_Cat_CatOpt <- merge(CatCombo_Cat, Cat_content, by = "Cat_id", all.x = T) %>% dplyr::arrange(CatCombo_id, Cat_id, CatOpt_id)
+    CatCombo_content_Cat <- merge(CatCombo_content, CatCombo_Cat_CatOpt, by = c("CatCombo_id", "CatOpt_id"), all.x = T) %>% dplyr::arrange(CatCombo_id, Cat_id, CatOpt_id)
 
     CatCombo_content_Cat$col_num <- NA
     CatCombo_content_Cat$col_num[1] <- 1
@@ -73,7 +73,7 @@
       else { CatCombo_content_Cat$col_num[i] <- 1 }
     }
     
-    CatCombo_content_Cat <- CatCombo_content_Cat %>% select(-Cat_id)
+    CatCombo_content_Cat <- CatCombo_content_Cat %>% dplyr::select(-Cat_id)
     
     tmp_wide <- reshape(CatCombo_content_Cat, idvar = c("CatCombo_id", "CatComboOpt_id"), timevar = "col_num", direction = "wide")
     tmp_width <- ncol(tmp_wide)
@@ -86,7 +86,7 @@
     tmp_cols <- tmp_cols + tmp_width
     tmp_wide <- tmp_wide[,tmp_cols]
     
-    CC_metadata_out <- tmp_wide %>% arrange(CatCombo_id)
+    CC_metadata_out <- tmp_wide %>% dplyr::arrange(CatCombo_id)
       
     return(CC_metadata_out)
   }
