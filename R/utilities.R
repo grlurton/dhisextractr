@@ -134,3 +134,41 @@ extraction_error <- function(out){
   }
   #write.csv(out)
 }
+
+
+
+
+make_full_metadata_extract <- function(data_dir, url, login, password){
+  setwd(data_dir)
+  print('Reading Metadata')
+  metadata <- extract_metdata(url=url, userID = login, password = password)
+  
+  ## EXTRACT DEG AND DS METADATA
+  
+  print('Extracting Data Elements')
+  DEG_metadata <- extract_metadata_DEG(metadata)
+  write.csv(DEG_metadata, 'data_elements_group.csv')
+  
+  print('Extracting Dat Sets')
+  DS_metadata <-  extract_metadata_DS(metadata)
+  write.csv(DS_metadata, 'data_sets.csv')
+  
+  print('Extracting Category Combo')
+  CC_metadata <- extract_metadata_CC(metadata)
+  write.csv(CC_metadata, 'category_combo.csv')
+  
+  
+  print('Extracting Organisation Units')
+  OU_metadata <- extract_metadata_OrgUnit(url=url, userID = login, password = password, 
+                                          list_metdata = metadata)
+  OU_metadata_flat <- flatten_hierarchy(OU_metadata)
+  write.csv(OU_metadata, 'org_units.csv')
+  
+  print('Extracting at reporting requirements')
+  OU_metadata_DSinfo <- extract_metadata_DS_OrgUnit(metadata, OU_metadata)
+  write.csv(OU_metadata_DSinfo, 'org_units_datasets.csv')
+  
+  print('Extracting geolocalisation')
+  geoloc <- extract_geolocalisation(metadata)
+  write_geolocalisation(geoloc)
+}
