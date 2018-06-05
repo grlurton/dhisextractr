@@ -78,7 +78,7 @@ make_shapefiles <- function(formatted_coordinates){
 #' @return Returns a list of two elements. The first element of the list is a shapefile of
 #' point organization units. The second element is a shapefile of polygon organization
 #' units.
-extract_geolocalisation <- function(org_units_description){
+extract_geolocalisation <- function(metadata){
   formatted_gps <- metadata$organisationUnits %>% dplyr::group_by(id) %>% dplyr::do(format_GPS(.))
   out <- make_shapefiles(data.frame(formatted_gps))
   out
