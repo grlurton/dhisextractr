@@ -92,6 +92,7 @@ extract_geolocalisation <- function(metadata){
 #'
 #' @param shapefiles A list of organization units and their GPS coordinates extracted from \link{extract_geolocalisation}.
 write_geolocalisation <- function(shapefiles){
+  library(shapefiles)
   shapefiles::write.shapefile(shapefiles[[1]], 'map_points', arcgis=T)
   shapefiles::write.shapefile(shapefiles[[2]], 'map_polygons', arcgis=T)
   point_read <- rgdal::readOGR('map_points.shp')

@@ -147,10 +147,12 @@
     colnames(DS_content) <- c("DE_id", "DS_id")
 
     for(i in 1:nrow(DS_metadata)) {
-      tmp <- DS_metadata$dataSetElements[[i]] %>% dplyr::select(dataElement.id, 
-                                                                dataSet.id) ## category combo information is removed (need to be reconsidered)
-      colnames(tmp) <- c("DE_id", "DS_id")
-      DS_content <- rbind(DS_content, tmp)
+      if(nrow(DS_metadata$dataSetElements[[i]]) > 0){
+        tmp <- DS_metadata$dataSetElements[[i]] %>% dplyr::select(dataElement.id, 
+                                                                  dataSet.id) ## category combo information is removed (need to be reconsidered)
+        colnames(tmp) <- c("DE_id", "DS_id")
+        DS_content <- rbind(DS_content, tmp)
+      }
       tmp <- NULL
     }
     
