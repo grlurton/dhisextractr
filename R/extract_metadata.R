@@ -207,9 +207,11 @@
 
     for(i in 1:nrow(DS_metadata)) {
       tmp <- DS_metadata$organisationUnits[[i]]
-      tmp$DS_id <- DS_metadata$id[i]
-      colnames(tmp) <- c("OU_id", "DS_id")
-      DS_content <- rbind(DS_content, tmp)
+      if(nrow(tmp) > 0){
+        tmp$DS_id <- DS_metadata$id[i]
+        colnames(tmp) <- c("OU_id", "DS_id")
+        DS_content <- rbind(DS_content, tmp)
+      }
       tmp <- NULL
     }
     
