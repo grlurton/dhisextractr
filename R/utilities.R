@@ -162,7 +162,7 @@ make_full_metadata_extract <- function(data_dir, url, login, password){
   OU_metadata <- extract_metadata_OrgUnit(url=url, userID = login, password = password, 
                                           list_metdata = metadata)
   OU_metadata_flat <- flatten_hierarchy(OU_metadata)
-  write.csv(OU_metadata, 'org_units.csv')
+  write.csv(OU_metadata_flat, 'org_units.csv')
   
   print('Extracting at reporting requirements')
   OU_metadata_DSinfo <- extract_metadata_DS_OrgUnit(metadata, OU_metadata)
