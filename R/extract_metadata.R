@@ -43,8 +43,8 @@
     
     CatCombo_Cat <- data.frame(matrix(ncol = 2, nrow = 0))
     for(i in 1:nrow(CatCombo_metadata)) {
+      tmp <- CatCombo_metadata$categories[[i]]
       if(nrow(tmp) > 0){
-        tmp <- CatCombo_metadata$categories[[i]]
         tmp$CatCombo_id <- CatCombo_metadata$id[i]
         CatCombo_Cat <- rbind(CatCombo_Cat, tmp)
         tmp <- NULL
@@ -54,8 +54,8 @@
     
     Cat_content <- data.frame(matrix(ncol = 2, nrow = 0))
     for(i in 1:nrow(Cat_metadata)) {
+      tmp <- Cat_metadata$categoryOptions[[i]]
       if(nrow(tmp) > 0){
-        tmp <- Cat_metadata$categoryOptions[[i]]
         tmp$Cat_id <- Cat_metadata$id[i]
         Cat_content <- rbind(Cat_content, tmp)
         tmp <- NULL
