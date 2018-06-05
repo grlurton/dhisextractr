@@ -108,9 +108,11 @@
     
     for(i in 1:nrow(DEG_metadata)) {
       tmp <- DEG_metadata$dataElements[[i]]
-      tmp$DEG_id <- DEG_metadata$id[i]
-      DEG_content <- rbind(DEG_content, tmp)
-      tmp <- NULL
+      if (nrow(tmp) > 0){
+        tmp$DEG_id <- DEG_metadata$id[i]
+        DEG_content <- rbind(DEG_content, tmp)
+        tmp <- NULL
+      }
     }
     
     DEG_metadata_short <- DEG_metadata %>% dplyr::select(name, id) %>% dplyr::rename(DEG_name = "name")
