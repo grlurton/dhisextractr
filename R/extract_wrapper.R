@@ -43,9 +43,11 @@ make_data_element_extract_call <- function (base_url, data_elements, org_units, 
 #' period , org_unit_ID , value and category.
 extract_data <- function(url_call , userID , password){
   out <- NULL
+  response <- NULL
+  parsed_page <- NULL
   pass <- paste(userID , password , sep = ':')
-  response<-RCurl::getURL(url_call , userpwd=pass , httpauth = 1L ,
-                   header=FALSE , ssl.verifypeer = FALSE)
+  response <- RCurl::getURL(url_call , userpwd=pass , httpauth = 1L ,
+                              header=FALSE , ssl.verifypeer = FALSE, .opts = list(timeout = 500))
   parsed_page <- jsonlite::fromJSON(response)
   if(length(parsed_page) > 0){
     if('rows' %in% names(parsed_page)){
@@ -80,9 +82,9 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
           period_type = 'quarter', data_dir){
   N_units <- length(org_units)
   n_calls <- ceiling(N_units/pace)
-  group <- sort(rep(seq(n_calls), pace))[1:N_units]
-  org_units <- data.frame(ID=org_units, group=group)
-  N_groups <- max(group)
+  tmp_group <- sort(rep(seq(n_calls), pace))[1:N_units]
+  org_units <- data.frame(ID=org_units, group=tmp_group)
+  N_groups <- max(tmp_group)
   time_env <- new.env()
   assign("start", Sys.time(), envir = time_env)
   assign("time_remaining", "Unknown", envir = time_env)
@@ -110,12 +112,11 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
       url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
                                                  period_for_call)
     }
-    tryCatch({
-      out <- extract_data(url_call, userID, password)
-    },
-    error = function(e){write.table(data.frame(ID = org_units$ID, group = group), 
-                                    paste0(data_dir, '/error.csv'), append=TRUE, 
-                                    col.names = FALSE)}
+    out <- tryCatch({
+      extract_data(url_call, userID, password)
+    }, error = function(e){write.table(data.frame(ID = org_units$ID, group = org_units$group),
+                                     paste0(data_dir, '/error.csv'), append=TRUE,
+                                     col.names = FALSE)}
     )
     print(paste0(nrow(out), " Data Points Extracted"))
     time_remaining <- difftime(Sys.time(), time_env$start,
@@ -126,8 +127,7 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
     plot(seq(1, N_groups), c(seq, rep(NA, N_groups - unique(org_units$group))),
          ylim = c(0, max(seq)), xlab = "Group", ylab = "Remaining Time Estimation (Hours)")
     assign("time_remaining_seq", seq, envir = time_env)
-    write.csv(out, paste0(data_dir, paste0('/data_',unique(org_units$group) ,'.csv')))
-    return(out)
+    if(nrow(out)>0) { write.csv(out, paste0(data_dir, paste0('/data_',unique(org_units$group) ,'.csv'))) }
   }
   
   extracted_data <- org_units %>% group_by(group) %>% do(extraction(.))
