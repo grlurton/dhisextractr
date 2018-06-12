@@ -27,7 +27,7 @@ make_data_element_extract_call <- function (base_url, data_elements, org_units, 
   data_elements_url <- paste0("dimension=dx:", paste(data_elements, collapse=";"))
   org_units_url <- paste0("&dimension=ou:", paste(org_units, collapse=";"))
   dates_url <- paste0("&dimension=pe:", paste(period, collapse=";"))
-  url_call <- paste0(base_url, "/api/25/analytics.json?", data_elements_url,
+  url_call <- paste0(base_url, "/api/analytics.json?", data_elements_url,     #### CAN WE REMOVE THE "25" IN THE API CALL??
                     org_units_url, dates_url)
   url_call
 }
@@ -95,6 +95,9 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
   if(period_type == 'month'){
     period_for_call <- period_to_months(period[1], period[2])
   }
+  if(period_type == 'year'){                    ### NEED TO BE ADAPTED FOR YEARLY DATASET ENTRY
+    period_for_call <- period
+  }
   extraction <- function(org_units) {
     time_remaining <- time_env$time_remaining
     print(paste("Group", unique(org_units$group), "of", N_groups,
@@ -133,3 +136,4 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
   extracted_data <- org_units %>% group_by(group) %>% do(extraction(.))
   return(extracted_data)
 }
+
