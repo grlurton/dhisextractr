@@ -163,9 +163,9 @@
           if(nrow(tmp) > 0){
             tmp <- tmp %>% dplyr::select(dataElement.id, 
                                         dataSet.id) ## category combo information is removed (need to be reconsidered)
-          }
           colnames(tmp) <- c("DE_id", "DS_id")
           DS_content <- rbind(DS_content, tmp)
+          }
         }
       } else if("dataElements" %in% DS_cols) {        # Update to take into account older versions of DHIS2 (up to 2.20)
         tmp <- DS_metadata$dataElements[[i]]
@@ -173,9 +173,9 @@
           if(nrow(tmp) > 0){
             tmp <- as.data.frame(tmp$id)
             tmp$DS_id <- DS_metadata$id[i]
-          }
           colnames(tmp) <- c("DE_id", "DS_id")
           DS_content <- rbind(DS_content, tmp)
+          }
         }
       }
       tmp <- NULL

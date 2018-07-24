@@ -79,8 +79,6 @@
     tmp_exp2 <- tmp_exp1[rep(rownames(tmp_exp1) , length(periods)) , ]
     tmp_exp2$period <- vect_periods
     
-    rep(1, 3)
-    
     tmp_exp2 <- tmp_exp2 %>% arrange(OU_id, period)
     
     return(tmp_exp2)
