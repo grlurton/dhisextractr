@@ -114,10 +114,18 @@
     
     for(i in 1:nrow(DEG_metadata)) {
       tmp <- DEG_metadata$dataElements[[i]]
-      if (nrow(tmp) > 0){
-        tmp$DEG_id <- DEG_metadata$id[i]
-        DEG_content <- rbind(DEG_content, tmp)
-        tmp <- NULL
+      if (!is.null(tmp)) {
+          if(nrow(tmp) > 0) {
+            if(ncol(tmp) > 1) {                           # Update to take into account older versions of DHIS2 (up to 2.20)
+              tmp <- as.data.frame(tmp$id)
+              tmp$DEG_id <- DEG_metadata$id[i]
+            } else {
+              tmp$DEG_id <- DEG_metadata$id[i]
+            }
+          colnames(tmp) <- c("DE_id", "DEG_id")
+          DEG_content <- rbind(DEG_content, tmp)
+          tmp <- NULL
+        }
       }
     }
     
@@ -126,8 +134,8 @@
     DE_metadata_short <- DE_metadata %>% dplyr::select(name, id, domainType, 
                                                 zeroIsSignificant, 
                                                 categoryCombo.id) %>% dplyr::rename(DE_name = "name", DE_id = "id")
-    DEG_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "id", by.y = "DE_id", all.x = T)
-    DEG_metadata_out <- DEG_metadata_out %>% dplyr::select(DEG_name, DEG_id, DE_name, id, domainType, zeroIsSignificant, 
+    DEG_metadata_out <- merge(DEG_content, DE_metadata_short, by.x = "DE_id", by.y = "DE_id", all.x = T)
+    DEG_metadata_out <- DEG_metadata_out %>% dplyr::select(DEG_name, DEG_id, DE_name, DE_id, domainType, zeroIsSignificant, 
                                                            categoryCombo.id) %>%dplyr::arrange(DEG_name, DE_name)
     return(DEG_metadata_out)
   } 
@@ -138,20 +146,37 @@
 #' @param list_metadata --> The list containing all metadata from a DHIS2.
 #' @return Returns a dataframe containing DataSet metadata 
   
-  extract_metadata_DS <- function(list_metdata) {
+  extract_metadata_DS <- function(list_metdata=d) {
 
     DS_metadata <- as.data.frame(list_metdata$dataSets,stringsAsFactors=FALSE)
     DE_metadata <- as.data.frame(list_metdata$dataElements,stringsAsFactors=FALSE)
     
     DS_content <- data.frame(matrix(ncol = 2, nrow = 0))
     colnames(DS_content) <- c("DE_id", "DS_id")
-
+    
+    DS_cols <- colnames(DS_metadata)
+    
     for(i in 1:nrow(DS_metadata)) {
-      if(nrow(DS_metadata$dataSetElements[[i]]) > 0){
-        tmp <- DS_metadata$dataSetElements[[i]] %>% dplyr::select(dataElement.id, 
-                                                                  dataSet.id) ## category combo information is removed (need to be reconsidered)
-        colnames(tmp) <- c("DE_id", "DS_id")
-        DS_content <- rbind(DS_content, tmp)
+      if("dataSetElements" %in% DS_cols) {
+        tmp <- DS_metadata$dataSetElements[[i]]
+        if(!is.null(tmp)) {
+          if(nrow(tmp) > 0){
+            tmp <- tmp %>% dplyr::select(dataElement.id, 
+                                        dataSet.id) ## category combo information is removed (need to be reconsidered)
+          colnames(tmp) <- c("DE_id", "DS_id")
+          DS_content <- rbind(DS_content, tmp)
+          }
+        }
+      } else if("dataElements" %in% DS_cols) {        # Update to take into account older versions of DHIS2 (up to 2.20)
+        tmp <- DS_metadata$dataElements[[i]]
+        if(!is.null(tmp)){
+          if(nrow(tmp) > 0){
+            tmp <- as.data.frame(tmp$id)
+            tmp$DS_id <- DS_metadata$id[i]
+          colnames(tmp) <- c("DE_id", "DS_id")
+          DS_content <- rbind(DS_content, tmp)
+          }
+        }
       }
       tmp <- NULL
     }

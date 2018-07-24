@@ -9,13 +9,15 @@
 #' @param period_end Date of the end of the period from which to extract data
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-make_data_set_extract_call <- function (base_url, data_sets, org_unit, period,
+make_data_set_extract_call <- function (base_url, data_sets, data_element_groups, org_unit, period,
                                         update_date = "2009-01-01"){
   data_set_url <- paste("dataSet=", data_sets,
                         "&", collapse = "", sep = "")
+  data_element_group_url <- paste("dataElementGroup=", data_element_groups,
+                        "&", collapse = "", sep = "")
   org_unit_url <- paste("orgUnit=", org_unit, "&",
                         collapse = "", sep = "")
-  url_call <- paste(base_url, "/api/dataValueSets.json?", data_set_url,
+  url_call <- paste(base_url, "/api/dataValueSets.json?", data_set_url, data_element_group_url,
                     org_unit_url, "startDate=", period[1], "&endDate=",
                     period[length(period)], 
                     "&lastUpdated=", update_date, sep = "")
@@ -27,7 +29,7 @@ make_data_element_extract_call <- function (base_url, data_elements, org_units, 
   data_elements_url <- paste0("dimension=dx:", paste(data_elements, collapse=";"))
   org_units_url <- paste0("&dimension=ou:", paste(org_units, collapse=";"))
   dates_url <- paste0("&dimension=pe:", paste(period, collapse=";"))
-  url_call <- paste0(base_url, "/api/25/analytics.json?", data_elements_url,
+  url_call <- paste0(base_url, "/api/analytics.json?", data_elements_url,     #### CAN WE REMOVE THE "25" IN THE API CALL??
                     org_units_url, dates_url)
   url_call
 }
@@ -77,7 +79,7 @@ extract_data <- function(url_call , userID , password){
 #' @param password your password for this DHIS2 setting, as a character string
 #' @return Returns an url that calls on the data to be extracted based on inputted
 #' parameters
-extract_all_data <- function (base_url, data_sets, org_units, period,
+extract_all_data <- function (base_url, data_sets="", data_element_groups="", org_units, period,
           pace = 1, userID, password, update_date = NULL , type_extract = 'ds', 
           period_type = 'quarter', data_dir){
   N_units <- length(org_units)
@@ -95,6 +97,9 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
   if(period_type == 'month'){
     period_for_call <- period_to_months(period[1], period[2])
   }
+  if(period_type == 'year'){                    ### NEED TO BE ADAPTED FOR YEARLY DATASET ENTRY
+    period_for_call <- period
+  }
   extraction <- function(org_units) {
     time_remaining <- time_env$time_remaining
     print(paste("Group", unique(org_units$group), "of", N_groups,
@@ -105,11 +110,11 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
                       period = "", org_unit_ID = "", value = "", category = "",
                       last_update = "")
     if (type_extract == 'ds'){
-      url_call <- make_data_set_extract_call(base_url, data_sets, org_units$ID,
+      url_call <- make_data_set_extract_call(base_url, data_sets, data_element_groups, org_units$ID,
                                              period_for_call, update_date = update_date)
     }
     if (type_extract == 'de'){
-      url_call <- make_data_element_extract_call(base_url, data_sets, org_units$ID,
+      url_call <- make_data_element_extract_call(base_url, data_sets, data_element_groups, org_units$ID,
                                                  period_for_call)
     }
     out <- tryCatch({
@@ -133,3 +138,4 @@ extract_all_data <- function (base_url, data_sets, org_units, period,
   extracted_data <- org_units %>% group_by(group) %>% do(extraction(.))
   return(extracted_data)
 }
+
