@@ -5,7 +5,6 @@ packrat/lib*/
 .Rbuildignore
 *.DS_Store
 packrat/src/
-*.Rproj
 .Rproj.user
 
 \.env
