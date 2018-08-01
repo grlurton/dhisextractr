@@ -132,7 +132,9 @@ extract_all_data <- function (base_url, data_sets="", data_element_groups="", or
     plot(seq(1, N_groups), c(seq, rep(NA, N_groups - unique(org_units$group))),
          ylim = c(0, max(seq)), xlab = "Group", ylab = "Remaining Time Estimation (Hours)")
     assign("time_remaining_seq", seq, envir = time_env)
-    if(nrow(out)>0) { write.csv(out, paste0(data_dir, paste0('/data_',unique(org_units$group) ,'.csv'))) }
+    if(!is.null(out)){
+      if(nrow(out)>0) { write.csv(out, paste0(data_dir, paste0('/data_',unique(org_units$group) ,'.csv'))) }
+    }
   }
   
   extracted_data <- org_units %>% group_by(group) %>% do(extraction(.))
